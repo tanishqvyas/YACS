@@ -49,7 +49,30 @@ def send_job_to_worker():
 
     # Random Schedueling
     if(SCHEDUELING_ALGO == "Random"):
-        pass
+        slot_found = False
+        while(not slot_found):
+            max_slot_worker = 0
+            n = random.randint(0,3)
+            wid = WORKER_AVAILABILITY.keys()[n]
+
+            if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
+                slot_found=True
+                max_slot_worker=wid
+            
+            # If Slot if Found Then Send the request
+            if(slot_found):
+                
+                # Decrease Slot availability by 1
+                WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
+
+                # Send the Request
+                s=socket.socket()
+                s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                s.send(json.dumps(task_to_send))
+
+            else:
+                print("No Slots Found. Sleeping for One Second")
+                time.sleep(1)
 
     # Round Robin Schedueling
     elif(SCHEDUELING_ALGO == "RR"):
@@ -78,8 +101,8 @@ def send_job_to_worker():
 
                 # Send the Request
                 s=socket.socket()
-                
-
+                s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                s.send(json.dumps(task_to_send))
 
             else:
                 print("No Slots Found. Sleeping for One Second")
