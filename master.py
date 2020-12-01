@@ -118,43 +118,43 @@ def send_job_to_worker():
         
         # Extracting task randomly 
         lock.acquire()       
-        cur_task_to_send = JOBS[0]
+        holder = JOBS[0]
         JOBS.pop(0)
-        JOBS.append(cur_task_to_send)
+        JOBS.append(holder)
         lock.release()
 
         
         # -----------------------Checking What should be done for the task----------------
 
         # check if any map task left to schedule
-        if(len(cur_task_to_send["list_map_tasks"]) > 0):
+        if(len(JOBS[-1]["list_map_tasks"]) > 0):
             
             task_to_send = {
-                "jobId": cur_task_to_send["jobId"],
-                "task_id": cur_task_to_send["list_map_tasks"][0]["task_id"],
-                "interval": cur_task_to_send["list_map_tasks"][0]["duration"]
+                "jobId": JOBS[-1]["jobId"],
+                "task_id": JOBS[-1]["list_map_tasks"][0]["task_id"],
+                "interval": JOBS[-1]["list_map_tasks"][0]["duration"]
             }
 
             # Deletet the task scheduled
-            cur_task_to_send["list_map_tasks"].pop(0)
+            JOBS[-1]["list_map_tasks"].pop(0)
 
         else:
-            if(cur_task_to_send["total_map_tasks"] == cur_task_to_send["total_completed_map_tasks"]):
+            if(JOBS[-1]["total_map_tasks"] == JOBS[-1]["total_completed_map_tasks"]):
 
-                if(len(cur_task_to_send["list_reduce_tasks"]) > 0):
+                if(len(JOBS[-1]["list_reduce_tasks"]) > 0):
                     # Schedule Reduce Tasks
                     task_to_send = {
-                    "jobId": cur_task_to_send["jobID"],
-                    "task_id": cur_task_to_send["list_reduce_tasks"][0]["task_id"],
-                    "interval": cur_task_to_send["list_reduce_tasks"][0]["duration"]
+                    "jobId": JOBS[-1]["jobID"],
+                    "task_id": JOBS[-1]["list_reduce_tasks"][0]["task_id"],
+                    "interval": JOBS[-1]["list_reduce_tasks"][0]["duration"]
                     }
                     
                     # Deletet the task scheduled
-                    cur_task_to_send["list_reduce_tasks"].pop(0)
+                    JOBS[-1]["list_reduce_tasks"].pop(0)
                 
                 # No reduce task left to schedule
                 else:
-                    if(cur_task_to_send["total_completed_reduce_tasks"] == cur_task_to_send["total_reduce_tasks"]):
+                    if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
                         continue
                     else:
                         continue
