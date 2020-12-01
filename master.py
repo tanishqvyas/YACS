@@ -78,25 +78,27 @@ def listen_worker_update():
         to_remove=-1
 
         print("Received : ", response)
-
+        print(JOBS)
         for i in range(len(JOBS)):
-           
+            print("yo",JOBS[i],response, sep="   <--->   ")
             if JOBS[i]["jobId"]==response["jobId"]:
+                print("yo4")
+                
                 if 'M' in response["taskId"]:
                 # Map job
-                    jobs_lock.acquire()
+                    # jobs_lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
-                    jobs_lock.release()
+                    # jobs_lock.release()
+                    print("yo2")
                     break
                 else:
-                    jobs_lock.acquire()
+                    # jobs_lock.acquire()
                     JOBS[i]["total_completed_reduce_tasks"]+=1
-                    jobs_lock.release()
-                    
+                    # jobs_lock.release()
+                    print("yo3")
 
                     if JOBS[i]["total_completed_reduce_tasks"] == JOBS[i]["total_reduce_tasks"]:
                         to_remove=i
-                        
                         break
                     
         if to_remove !=-1:
@@ -106,13 +108,13 @@ def listen_worker_update():
             with open(logfile,"a") as f:
                 w = csv.writer(f)
                 w.writerow([response["jobId"],total_time])
-            jobs_lock.acquire()
+            # jobs_lock.acquire()
             JOBS.pop(to_remove)
-            jobs_lock.release()
+            # jobs_lock.release()
 
-        worker_lock.acquire()
+        # worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
-        worker_lock.release()
+        # worker_lock.release()
 
     worker.close()
 
@@ -132,7 +134,7 @@ def send_job_to_worker():
             time.sleep(1)
         
         # Extracting task randomly 
-        jobs_lock.acquire()       
+        # jobs_lock.acquire()       
         holder = JOBS[0]
         # JOBS.pop(0)
         # JOBS.append(holder)
@@ -168,11 +170,11 @@ def send_job_to_worker():
                 # No reduce task left to schedule
                 else:
                     if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
-                        print("It came here okay")
+                        # print("It came here okay")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         continue
                     else:
-                        print("It came here okay but this is other else")
+                        # print("It came here okay but this is other else")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         continue
 
@@ -180,7 +182,7 @@ def send_job_to_worker():
             else:
                 continue
         
-        jobs_lock.release()            
+        # jobs_lock.release()            
 
         # print("----------------------------------\n")
         # print(task_to_send)
