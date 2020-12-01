@@ -78,7 +78,7 @@ def listen_worker_update():
         to_remove=-1
 
         print("Received : ", response)
-        print(JOBS)
+        # print(JOBS)
         for i in range(len(JOBS)):
             print("yo",JOBS[i],response, sep="   <--->   ")
             if JOBS[i]["jobId"]==response["jobId"]:
@@ -108,9 +108,9 @@ def listen_worker_update():
             with open(logfile,"a") as f:
                 w = csv.writer(f)
                 w.writerow([response["jobId"],total_time])
-            # jobs_lock.acquire()
+            jobs_lock.acquire()
             JOBS.pop(to_remove)
-            # jobs_lock.release()
+            jobs_lock.release()
 
         # worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
@@ -132,16 +132,29 @@ def send_job_to_worker():
         while len(JOBS)==0:
             print("No Jobs left to schedule")
             time.sleep(1)
+            
         
+        jobs_lock.acquire()
+        if(len(JOBS) > 0):
+            pass
+        else:
+            jobs_lock.release()
+            continue       
         # Extracting task randomly 
-        # jobs_lock.acquire()       
         holder = JOBS[0]
         # JOBS.pop(0)
         # JOBS.append(holder)
 
         # -----------------------Checking What should be done for the task----------------
 
+        # print(JOBS, len(JOBS))
         # check if any map task left to schedule
+        if(len(JOBS) > 0):
+            pass
+        else:
+            jobs_lock.release()
+            continue
+        # print(len(JOBS))
         if(len(JOBS[-1]["list_map_tasks"]) > 0):
             
             task_to_send = {
@@ -172,17 +185,20 @@ def send_job_to_worker():
                     if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
                         # print("It came here okay")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
+                        jobs_lock.release()
                         continue
                     else:
                         # print("It came here okay but this is other else")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
+                        jobs_lock.release()
                         continue
 
             # Continue if there are map tasks runnning but none left to schedule
             else:
+                jobs_lock.release()
                 continue
         
-        # jobs_lock.release()            
+        jobs_lock.release()            
 
         # print("----------------------------------\n")
         # print(task_to_send)
