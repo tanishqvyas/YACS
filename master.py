@@ -10,7 +10,7 @@ import csv
 jobs_lock = threading.Lock()
 worker_lock = threading.Lock()
 task_lock = threading.Lock()
-log_lock = thrading.Lock()
+log_lock = threading.Lock()
 
 
 #---------- Custom Imports -------------#
@@ -298,7 +298,7 @@ JOBS = []
 
 
 # Creating log files for Master
-master_begins = time()
+master_begins = time.time()
 
 if sys.argv[2] == "Random":
     logfile = "Masterlogs_Random.csv"
