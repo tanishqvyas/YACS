@@ -5,8 +5,13 @@ import sys
 import random
 import numpy
 import threading
+import csv
 
-lock = threading.Lock()
+jobs_lock = threading.Lock()
+worker_lock = threading.Lock()
+task_lock = threading.Lock()
+log_lock = thrading.Lock()
+
 
 #---------- Custom Imports -------------#
 
@@ -80,9 +85,9 @@ def listen_worker_update():
             if JOBS[i]["jobId"]==response["jobId"]:
                 if 'M' in response["taskId"]:
                 # Map job
-                    lock.acquire()
+                    jobs_lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
-                    lock.release()
+                    jobs_lock.release()
                     break
                 else:
                     JOBS[i]["total_completed_reduce_tasks"]+=1
@@ -91,13 +96,13 @@ def listen_worker_update():
                         break
         if to_remove !=-1:
             #total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
-            lock.acquire()
+            jobs_lock.acquire()
             JOBS.pop(to_remove)
-            lock.release()
+            jobs_lock.release()
 
-        lock.acquire()
+        worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
-        lock.release()
+        worker_lock.release()
 
     worker.close()
 
@@ -117,11 +122,11 @@ def send_job_to_worker():
             time.sleep(1)
         
         # Extracting task randomly 
-        lock.acquire()       
+        task_lock.acquire()       
         cur_task_to_send = JOBS[0]
         JOBS.pop(0)
         JOBS.append(cur_task_to_send)
-        lock.release()
+        task_lock.release()
 
         
         # -----------------------Checking What should be done for the task----------------
@@ -183,7 +188,8 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
-                    lock.acquire()
+                    worker_lock.acquire()
+                    jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -193,7 +199,8 @@ def send_job_to_worker():
                     s.send(json.dumps(task_to_send).encode())
                     print("Skadoosh : ", task_to_send)
                     JOBS.pop(0)
-                    lock.release()
+                    jobs_lock.release()
+                    worker_lock.release()
                     break
 
                 else:
@@ -220,7 +227,8 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
-                    lock.acquire()
+                    worker_lock.acquire()
+                    jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -229,7 +237,8 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
-                    lock.release()
+                    jobs_lock.release()
+                    worker_lock.release()
                     break
                     
 
@@ -258,7 +267,8 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
-                    lock.acquire()
+                    worker_lock.acquire()
+                    jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -266,8 +276,8 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    JOBS.pop(0)
-                    lock.release()
+                    jobs_lock.release()
+                    worker_lock.release()
                     break
                     
 
@@ -282,6 +292,22 @@ def send_job_to_worker():
 PATH_TO_CONFIG = sys.argv[1]
 SCHEDUELING_ALGO = sys.argv[2]
 JOBS = []
+
+
+# Creating log files for Master
+master_begins = time()
+
+if sys.argv[2] == "Random":
+    logfile = "Masterlogs_Random.csv"
+elif sys.argv[2] == "RR":
+    logfile = "Masterlogs_RR.csv"
+elif sys.argv[2] == "LL":
+    logfile = "Masterlogs_LL.csv"
+
+f = open(logfile,'w+')
+w = csv.writer(f)
+w.writerow(["Job_Id", "Execution_time"])
+
 
 
 # Reading the config.json
