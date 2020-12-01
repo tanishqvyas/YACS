@@ -62,11 +62,11 @@ def send_job_to_worker():
         max_slot_worker = 0
         while(not slot_found):
 
-            for wid, aval_slots in WORKER_AVAILABILITY.items():
+            for wid, _ in WORKER_AVAILABILITY.items():
 
-                if(WORKER_AVAILABILITY[wid] > max_slots): 
+                if(WORKER_AVAILABILITY[wid]["slots"] > max_slots): 
                     
-                    max_slots = WORKER_AVAILABILITY[wid]
+                    max_slots = WORKER_AVAILABILITY[wid]["slots"]
                     max_slot_worker = wid
                     slot_found = True
             
@@ -74,7 +74,7 @@ def send_job_to_worker():
             if(slot_found):
                 
                 # Decrease Slot availability by 1
-                WORKER_AVAILABILITY[max_slot_worker] -= 1
+                WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
                 # Send the Request
                 s=socket.socket()
@@ -99,8 +99,9 @@ configuration = json.load(config_file)
 # Initialized Worker Slots Availability
 WORKER_AVAILABILITY = dict()
 for worker in configuration["workers"]:
-    WORKER_AVAILABILITY[worker["worker_id"]] = worker["slots"]
-
+    WORKER_AVAILABILITY[worker["worker_id"]] = {}
+    WORKER_AVAILABILITY[worker["worker_id"]]["slots"] = worker["slots"]
+    WORKER_AVAILABILITY[worker["worker_id"]]["port"] = worker["port"]
 
 
 # Start the thread to listen to jobs
