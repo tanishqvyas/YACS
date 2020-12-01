@@ -71,7 +71,7 @@ def listen_worker_update():
     master.bind(('localhost',5001))
     master.listen(100)
     while True:
-        worker, address=master.accept()
+        worker, address = master.accept()
         response=worker.recv(2048).decode()
         #worker id, job id, task id
         response=json.loads(response)
