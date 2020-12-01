@@ -17,20 +17,22 @@ def listen_job_request():
     master.listen(1)
     while True:
         job,address=master.accept()
-        request_json=job.recv(1024).decode()
+        request_json=job.recv(2048).decode()
         # NEED TO STORE TIME OF ARRIVAL FOR ANALYSIS LATER
         requests=json.loads(request_json)
         jobId = requests['job_id']
         
+        print(requests)
+
         # Extractinnng the values for a Job
-        total_map_tasks=len(requests['job_id']['map_tasks'])
-        total_reduce_tasks=len(requests['job_id']['reduce_tasks'])
+        total_map_tasks=len(requests['map_tasks'])
+        total_reduce_tasks=len(requests['reduce_tasks'])
         
         total_completed_map_tasks=0
         total_completed_reduce_tasks=0
 
-        list_map_tasks=requests['job_id']['map_tasks']
-        list_reduce_tasks=requests['job_id']['reduce_tasks']
+        list_map_tasks=requests['map_tasks']
+        list_reduce_tasks=requests['reduce_tasks']
 
         job_arrival_time=time.time()
         job_completion_time=-1
@@ -65,10 +67,13 @@ def listen_worker_update():
     master.listen(20)
     while True:
         worker,address=master.accept()
-        response=worker.recv(1024).decode()
+        response=worker.recv(2048).decode()
         #worker id, job id, task id
         response=json.loads(response)
         to_remove=-1
+
+        print("Received : ", response)
+
         for i in range(len(JOBS)):
             if JOBS[i]["jobId"]==response["jobId"]:
                 if 'M' in response["taskId"]:
@@ -128,7 +133,7 @@ def send_job_to_worker():
         if(len(cur_task_to_send["list_map_tasks"]) > 0):
             
             task_to_send = {
-                "jobId": cur_task_to_send["jobID"],
+                "jobId": cur_task_to_send["jobId"],
                 "task_id": cur_task_to_send["list_map_tasks"][0]["task_id"],
                 "interval": cur_task_to_send["list_map_tasks"][0]["duration"]
             }
@@ -152,7 +157,7 @@ def send_job_to_worker():
                 
                 # No reduce task left to schedule
                 else:
-                    if((cur_task_to_send["total_completed_reduce_tasks"] == cur_task_to_send["total_reduce_tasks"]):
+                    if(cur_task_to_send["total_completed_reduce_tasks"] == cur_task_to_send["total_reduce_tasks"]):
                         continue
                     else:
                         continue
@@ -185,6 +190,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
+                    print("Skadoosh : ", task_to_send)
                     JOBS.pop(0)
                     break
 

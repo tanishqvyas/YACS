@@ -26,8 +26,9 @@ def listen_from_master():
         if(msg):
             requests = json.loads(msg)
             job_id = requests["jobId"]
-            task_id = requests["taskId"]
+            task_id = requests["task_id"]
             interval = requests["interval"]
+            print("Received : ", job_id, task_id, interval)
             sem.acquire()
             execution_pool[job_id,task_id]=int(interval)
             sem.release()
@@ -35,15 +36,17 @@ def listen_from_master():
 
 
 def send_to_master():
+    global worker_id
     s=socket.socket()
     worker_host='localhost'
     master_port=5001
     s.connect((master_host,master_port))
     while(1):
-        for i in execution_pool:
+        for i, _ in execution_pool.items():
             execution_pool[i]-=1
             if(execution_pool[i]<=0):        
                 del execution_pool[i]
+                print(i)
                 finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
                 s.sendall(json.dumps(finish).encode())
                 #sent id to master using thread2
