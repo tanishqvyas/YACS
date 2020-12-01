@@ -16,12 +16,18 @@ def listen_from_master():
     s=socket.socket()
     worker_host='localhost'
     worker_port=port
-    s.connect((worker_host,worker_port))
+    s.bind((worker_host,worker_port))
+    s.listen(1)
+    connection,address=s.accept()
     #while(1):
     #s.sendall(worker_id.encode())
-    while(1):
-        if(msg=s.recv(2048).decode()):
-            job_id,task_id,interval=msg.split(" ")
+    while(True):
+        msg=connection.recv(2048).decode()
+        if(msg):
+            requests = json.loads(msg)
+            job_id = requests["jobId"]
+            task_id = requests["taskId"]
+            interval = requests["interval"]
             sem.acquire()
             execution_pool[job_id,task_id]=int(interval)
             sem.release()
@@ -38,10 +44,8 @@ def send_to_master():
             execution_pool[i]-=1
             if(execution_pool[i]==0):        
                 del execution_pool[i]
-                # send worker_id, job_id, task_id
-                msg=" ".join([worker_id,i])
-                #str(worker_id)+" "+str(i)
-                s.sendall(msg.encode())
+                finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
+                s.sendall(json.dumps(finish))
                 #sent id to master using thread2
         time.sleep(1)
     s.close()
@@ -74,7 +78,6 @@ while(1):
 
 '''
 
-
 '''
 #As it listens to request - create thread (bcuz master keeps track of number of slots free - so safe to create thread)
 def call_worker(id,interval):
@@ -84,10 +87,6 @@ def call_worker(id,interval):
     t1.join()
     t2.join()
     
-
-
-
-
 class worker_job:
     #print("done done")
     def __init__(self):#,id,interval):
