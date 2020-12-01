@@ -10,7 +10,7 @@ sem=threading.Semaphore(1)
 port = int(sys.argv[1])
 worker_id = int(sys.argv[2])
 
-execution_pool=dict()
+execution_pool=list()
 
 def listen_from_master():
     s=socket.socket()
@@ -29,10 +29,9 @@ def listen_from_master():
             task_id = requests["taskId"]
             interval = requests["interval"]
             sem.acquire()
-            execution_pool[job_id,task_id]=int(interval)
+            execution_pool.append([job_id,task_id,float(interval)])
             sem.release()
     s.close()
-
 
 def send_to_master():
     s=socket.socket()
@@ -40,6 +39,7 @@ def send_to_master():
     master_port=5001
     s.connect((master_host,master_port))
     while(1):
+        '''
         for i in execution_pool:
             execution_pool[i]-=1
             if(execution_pool[i]==0):        
@@ -47,6 +47,16 @@ def send_to_master():
                 finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
                 s.sendall(json.dumps(finish).encode())
                 #sent id to master using thread2
+        time.sleep(1)
+        '''
+        sem.acquire()
+        for task in range(len(execution_pool)):
+            execution_pool[task][2]-=1
+        for finished in range(len(execution_pool)):
+            if execution_pool[finished][2]<=0:
+                finish = {"workerId":worker_id,"jobId":execution_pool[finished][0],"taskId":execution_pool[finished][1]}
+                s.sendall(json.dumps(finish).encode())
+        sem.release()
         time.sleep(1)
     s.close()
 
