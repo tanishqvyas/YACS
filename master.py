@@ -29,8 +29,14 @@ def listen_job_request():
 
         job.close()
 
+
+
 def listen_worker_update():
-    pass
+    
+    # Request received from worker
+
+
+
 
 # Function to Schedule TASKS
 def send_job_to_worker():
@@ -39,108 +45,120 @@ def send_job_to_worker():
     global WORKER_AVAILABILITY
     global JOBS
 
-    # Check if task available
-    while len(JOBS)==0:
-        print("No tasks left to schedule")
-        time.sleep(1)
-    
-    # Extracting task
-    task_to_send={"jobId":JOBS[0][2],"taskId":JOBS[0][0],"interval":JOBS[0][1]}
+    while True:
 
-    # Random Schedueling
-    if(SCHEDUELING_ALGO == "Random"):
-        slot_found = False
-        while(not slot_found):
-            max_slot_worker = 0
-            n = random.randint(0,3)
-            wid = WORKER_AVAILABILITY.keys()[n]
-
-            if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
-                slot_found=True
-                max_slot_worker=wid
-            
-            # If Slot if Found Then Send the request
-            if(slot_found):
-                
-                # Decrease Slot availability by 1
-                WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
-
-                # Send the Request
-                s=socket.socket()
-                s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                s.send(json.dumps(task_to_send))
-
-            else:
-                print("No Slots Found. Sleeping for One Second")
-                time.sleep(1)
-
-    # Round Robin Schedueling
-    elif(SCHEDUELING_ALGO == "RR"):
+        # Check if task available
+        while len(JOBS)==0:
+            print("No tasks left to schedule")
+            time.sleep(1)
         
-        slot_found = False
-        while(not slot_found):
-            
-            max_slot_worker = 0
-            cur_workers = WORKER_AVAILABILITY.keys()
-            cur_workers.sort()
+        # Extracting task
+        task_to_send={"jobId":JOBS[0][2],"taskId":JOBS[0][0],"interval":JOBS[0][1]}
 
-            for wid in cur_workers:
+        # Random Schedueling
+        if(SCHEDUELING_ALGO == "Random"):
+            slot_found = False
+
+            workers_list = WORKER_AVAILABILITY.keys()
+
+            while(not slot_found):
+                max_slot_worker = 0
+                
+                wid = random.choice(workers_list)
 
                 if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
                     slot_found=True
                     max_slot_worker=wid
-                    break
-            
-            # If Slot if Found Then Send the request
-            if(slot_found):
                 
-                # Decrease Slot availability by 1
-                WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
-
-                # Send the Request
-                s=socket.socket()
-                s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                s.send(json.dumps(task_to_send))
-
-            else:
-                print("No Slots Found. Sleeping for One Second")
-                time.sleep(1)
-        
-
-
-
-
-
-
-    # Least Loaded Schedueling
-    else:
-        slot_found = False
-        max_slots = 0
-        max_slot_worker = 0
-        while(not slot_found):
-
-            for wid, _ in WORKER_AVAILABILITY.items():
-
-                if(WORKER_AVAILABILITY[wid]["slots"] > max_slots): 
+                # If Slot if Found Then Send the request
+                if(slot_found):
                     
-                    max_slots = WORKER_AVAILABILITY[wid]["slots"]
-                    max_slot_worker = wid
-                    slot_found = True
+                    # Decrease Slot availability by 1
+                    WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
+
+                    # Send the Request
+                    s=socket.socket()
+                    s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                    s.send(json.dumps(task_to_send))
+                    JOBS.pop(0)
+                    break
+
+                else:
+                    workers_list.remove(wid)
+
+
+        # Round Robin Schedueling
+        elif(SCHEDUELING_ALGO == "RR"):
             
-            # If Slot if Found Then Send the request
-            if(slot_found):
+            slot_found = False
+            while(not slot_found):
+
+                max_slot_worker = 0
+                cur_workers = WORKER_AVAILABILITY.keys()
+                cur_workers.sort()
+
+                for wid in cur_workers:
+
+                    if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
+                        slot_found=True
+                        max_slot_worker=wid
+                        break
                 
-                # Decrease Slot availability by 1
-                WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
+                # If Slot if Found Then Send the request
+                if(slot_found):
+                    
+                    # Decrease Slot availability by 1
+                    WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
-                # Send the Request
-                s=socket.socket()
-                s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                s.send(json.dumps(task_to_send))
+                    # Send the Request
+                    s=socket.socket()
+                    s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                    s.send(json.dumps(task_to_send))
+                    JOBS.pop(0)
+                    break
+                    
 
-            else:
-                print("No Slots Found. Sleeping for One Second")
-                time.sleep(1)
+                else:
+                    print("No Slots Found. Sleeping for One Second")
+                    time.sleep(1)
+            
+
+
+        # Least Loaded Schedueling
+        else:
+            slot_found = False
+            max_slots = 0
+            max_slot_worker = 0
+            while(not slot_found):
+
+                for wid, _ in WORKER_AVAILABILITY.items():
+
+                    if(WORKER_AVAILABILITY[wid]["slots"] > max_slots): 
+                        
+                        max_slots = WORKER_AVAILABILITY[wid]["slots"]
+                        max_slot_worker = wid
+                        slot_found = True
+                        
+                
+                # If Slot if Found Then Send the request
+                if(slot_found):
+                    
+                    # Decrease Slot availability by 1
+                    WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
+
+                    # Send the Request
+                    s=socket.socket()
+                    s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                    s.send(json.dumps(task_to_send))
+                    JOBS.pop(0)
+                    break
+                    
+
+                else:
+                    print("No Slots Found. Sleeping for One Second")
+                    time.sleep(1)
+
+
 
 
 # Reading the command line arguments
@@ -164,5 +182,9 @@ for worker in configuration["workers"]:
 # Start the thread to listen to jobs
 job_listening_thread = threading.Thread(target = listen_job_request)
 job_listening_thread.start()
+
 job_scheduling_thread = threading.Thread(target = send_job_to_worker)
 job_scheduling_thread.start()
+
+worker_updates_thread = threading.Thread(target = listen_worker_update)
+worker_updates_thread.start()
