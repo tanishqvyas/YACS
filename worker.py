@@ -17,21 +17,23 @@ def listen_from_master():
     worker_host='localhost'
     worker_port=port
     s.bind((worker_host,worker_port))
-    s.listen(1)
-    connection,address=s.accept()
+    s.listen(100)
     #while(1):
     #s.sendall(worker_id.encode())
     while(True):
+        connection,address=s.accept()
         msg=connection.recv(2048).decode()
-        if(msg):
+
+        if(msg != ""):
             requests = json.loads(msg)
             job_id = requests["jobId"]
             task_id = requests["task_id"]
             interval = requests["interval"]
             print("Received : ", job_id, task_id, interval)
-            sem.acquire()
+            # sem.acquire()
             execution_pool.append([job_id,task_id,float(interval)])
-            sem.release()
+            # sem.release()
+        
     s.close()
 
 def send_to_master():
@@ -52,14 +54,15 @@ def send_to_master():
                 #sent id to master using thread2
         time.sleep(1)
         '''
-        sem.acquire()
+        # sem.acquire()
         for task in range(len(execution_pool)):
             execution_pool[task][2]-=1
         for finished in range(len(execution_pool)):
             if execution_pool[finished][2]<=0:
                 finish = {"workerId":worker_id,"jobId":execution_pool[finished][0],"taskId":execution_pool[finished][1]}
                 s.sendall(json.dumps(finish).encode())
-        sem.release()
+                print("Wapas bhej a hai maal : ", finish)
+        # sem.release()
         time.sleep(1)
     s.close()
 
