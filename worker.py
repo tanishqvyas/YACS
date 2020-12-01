@@ -12,8 +12,9 @@ import threading
 sem=threading.Semaphore(1)
 port = int(sys.argv[1])
 worker_id = int(sys.argv[2])
+algo = sys.argv[3]
 
-logfile=str(worker_id)+"_log_file.csv"
+logfile=str(worker_id)+"_log_file_"+ algo+".csv"
 f = open(logfile, "w+")
 w = csv.writer(f)
 w.writerow(["task_Id","time"])
