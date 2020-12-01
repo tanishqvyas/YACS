@@ -16,8 +16,8 @@ def listen_job_request():
     master.bind((master_host,master_port))
     master.listen(1)
     while True:
-        job,address=s.accept()
-        request_json=job.recv(1024)
+        job,address=master.accept()
+        request_json=job.recv(1024).decode()
         # NEED TO STORE TIME OF ARRIVAL FOR ANALYSIS LATER
         requests=json.loads(request_json)
         jobId = requests['job_id']
@@ -37,7 +37,7 @@ def listen_worker_update():
     global WORKER_AVAILABILITY
     # Request received from worker
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    master.bind('localhost',5001)
+    master.bind(('localhost',5001))
     master.listen(20)
     while True:
         worker,address=master.accept()
@@ -67,7 +67,7 @@ def send_job_to_worker():
         if(SCHEDUELING_ALGO == "Random"):
             slot_found = False
 
-            workers_list = WORKER_AVAILABILITY.keys()
+            workers_list = list(WORKER_AVAILABILITY.keys())
 
             while(not slot_found):
                 max_slot_worker = 0
@@ -87,7 +87,7 @@ def send_job_to_worker():
                     # Send the Request
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                    s.send(json.dumps(task_to_send))
+                    s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
                     break
 
@@ -102,7 +102,7 @@ def send_job_to_worker():
             while(not slot_found):
 
                 max_slot_worker = 0
-                cur_workers = WORKER_AVAILABILITY.keys()
+                cur_workers = list(WORKER_AVAILABILITY.keys())
                 cur_workers.sort()
 
                 for wid in cur_workers:
@@ -121,7 +121,7 @@ def send_job_to_worker():
                     # Send the Request
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                    s.send(json.dumps(task_to_send))
+                    s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
                     break
                     
@@ -157,7 +157,7 @@ def send_job_to_worker():
                     # Send the Request
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
-                    s.send(json.dumps(task_to_send))
+                    s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
                     break
                     

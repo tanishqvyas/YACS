@@ -7,8 +7,8 @@ import numpy
 import threading
 
 sem=threading.Semaphore(1)
-port = sys.argv[1]
-worker_id = sys.argv[2]
+port = int(sys.argv[1])
+worker_id = int(sys.argv[2])
 
 execution_pool=dict()
 
@@ -45,7 +45,7 @@ def send_to_master():
             if(execution_pool[i]==0):        
                 del execution_pool[i]
                 finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
-                s.sendall(json.dumps(finish))
+                s.sendall(json.dumps(finish).encode())
                 #sent id to master using thread2
         time.sleep(1)
     s.close()
