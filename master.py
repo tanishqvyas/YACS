@@ -42,6 +42,7 @@ def listen_worker_update():
     while True:
         worker,address=master.accept()
         response=worker.recv(1024)
+        response=json.loads(response)
         WORKER_AVAILABILITY[response["workerid"]]["slots"]+=1
         worker.close()
 
