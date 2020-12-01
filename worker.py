@@ -17,11 +17,11 @@ def listen_from_master():
     worker_host='localhost'
     worker_port=port
     s.bind((worker_host,worker_port))
-    s.listen(1)
-    connection,address=s.accept()
+    s.listen(5)
     #while(1):
     #s.sendall(worker_id.encode())
     while(True):
+        connection,address=s.accept()
         msg=connection.recv(2048).decode()
         if(msg):
             requests = json.loads(msg)
@@ -29,19 +29,26 @@ def listen_from_master():
             task_id = requests["task_id"]
             interval = requests["interval"]
             print("Received : ", job_id, task_id, interval)
-            sem.acquire()
-            execution_pool.append([job_id,task_id,float(interval)])
-            sem.release()
-    s.close()
+            t2 = threading.Thread(target=send_to_master, args=(job_id, task_id, interval)) 
+            t2.start()
+        connection.close()
 
-def send_to_master():
+def send_to_master(job_id, task_id, interval):
     global worker_id
+    time.sleep(interval)
+    print("After execution of",job_id, task_id, interval)
     s=socket.socket()
     worker_host='localhost'
     master_port=5001
-    s.connect((master_host,master_port))
+    finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
+    s.connect((worker_host,master_port))  
+    s.send(json.dumps(finish).encode())
+    s.close()
+
+
+    '''
     while(1):
-        '''
+        
         for i in execution_pool:
             execution_pool[i]-=1
             if(execution_pool[i]<=0):        
@@ -51,7 +58,7 @@ def send_to_master():
                 s.sendall(json.dumps(finish).encode())
                 #sent id to master using thread2
         time.sleep(1)
-        '''
+        
         sem.acquire()
         for task in range(len(execution_pool)):
             execution_pool[task][2]-=1
@@ -62,17 +69,17 @@ def send_to_master():
         sem.release()
         time.sleep(1)
     s.close()
-
+    '''
 
 from_master=threading.Thread(target=listen_from_master())
-to_master=threading.Thread(target=send_to_master())
+#to_master=threading.Thread(target=send_to_master())
 
 from_master.start()
-to_master.start()
-
+#to_master.start()
+'''
 from_master.join()
 to_master.join()
-
+'''
 '''
 #task_id = 0
 # Listen to master
