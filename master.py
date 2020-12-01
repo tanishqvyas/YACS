@@ -7,7 +7,6 @@ import numpy
 import threading
 
 #---------- Custom Imports -------------#
-#from worker import worker_func
 
 def listen_job_request():
     global JOBS
@@ -34,8 +33,48 @@ def listen_job_request():
 
 def listen_worker_update():
     pass
+
+# Function to Schedule TASKS
 def send_job_to_worker():
-    pass
+    
+    global SCHEDUELING_ALGO
+    global WORKER_AVAILABILITY 
+
+    # Random Schedueling
+    if(SCHEDUELING_ALGO == "Random"):
+        pass
+
+    # Round Robin Schedueling
+    elif(SCHEDUELING_ALGO == "RR"):
+        pass
+
+    # Least Loaded Schedueling
+    else:
+        slot_found = False
+        max_slots = 0
+        max_slot_worker = 0
+        while(not slot_found):
+
+            for wid, aval_slots in WORKER_AVAILABILITY.items():
+
+                if(WORKER_AVAILABILITY[wid] > max_slots): 
+                    
+                    max_slots = WORKER_AVAILABILITY[wid]
+                    max_slot_worker = wid
+                    slot_found = True
+            
+            # If SLot if Found Then Send the request
+            if(slot_found):
+                
+                # Decrease Slot availability by 1
+                WORKER_AVAILABILITY[max_slot_worker] -= 1
+
+                # Send the Request
+
+            else:
+                print("No Slots Found. Sleeping for One Second")
+                time.sleep(1)
+
 
 # Reading the command line arguments
 PATH_TO_CONFIG = sys.argv[1]
@@ -50,24 +89,10 @@ configuration = json.load(config_file)
 # Initialized Worker Slots Availability
 WORKER_AVAILABILITY = dict()
 for worker in configuration["workers"]:
-    WORKER_AVAILABILITY[worker["worker_id"]] = {}
-    WORKER_AVAILABILITY[worker["worker_id"]]["available slots"] = worker["slots"]
+    WORKER_AVAILABILITY[worker["worker_id"]] = worker["slots"]
 
 
-# Threads creation for workers
-'''
-# WORKER THREADS
-WORKER_THREADS = dict()
 
-## Starting the worker threads as per the configuration
-for worker in configuration["workers"]:
-
-    # Initialize worker Thread and pass the appropriate worker_id, number_of_slots, port
-    WORKER_THREADS[worker["worker_id"]] = threading.Thread(target=worker, args=(worker["worker_id"], worker["slots"], worker["port"]))
-    print("(status= active) Worker ", worker["worker_id"], " has ", worker["slots"] ," slots.\n")
-    WORKER_THREADS[worker["worker_id"]].start()
-'''
-
+# Start the thread to listen to jobs
 t1 = threading.Thread(target = listen_job_request)
 t1.start()
-t1.join()
