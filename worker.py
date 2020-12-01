@@ -59,11 +59,21 @@ def send_to_master():
         # sem.acquire()
         for task in range(len(execution_pool)):
             execution_pool[task][2]-=1
+        
+        to_delete = []
         for finished in range(len(execution_pool)):
             if execution_pool[finished][2]<=0:
+                to_delete.append(execution_pool[finished])
                 finish = {"workerId":worker_id,"jobId":execution_pool[finished][0],"taskId":execution_pool[finished][1]}
                 s.send(json.dumps(finish).encode())
+                
                 print("Wapas bhej a hai maal : ", finish)
+
+        for i in to_delete:
+            print("Removed : ", i)
+            execution_pool.remove(i)
+
+
         # sem.release()
         time.sleep(1)
     s.close()

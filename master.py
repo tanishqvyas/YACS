@@ -64,7 +64,7 @@ def listen_worker_update():
     # Request received from worker
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     master.bind(('localhost',5001))
-    master.listen(20)
+    master.listen(100)
     while True:
         worker,address=master.accept()
         response=worker.recv(2048).decode()
@@ -89,8 +89,9 @@ def listen_worker_update():
             #total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
             JOBS.pop(to_remove)
 
-        WORKER_AVAILABILITY[response["workerid"]]["slots"]+=1
-        worker.close()
+        WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
+
+    worker.close()
 
 
 # Function to Schedule TASKS
