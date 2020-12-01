@@ -34,20 +34,20 @@ def listen_from_master():
             task_id = requests["task_id"]
             interval = requests["interval"]
             print("Received : ", job_id, task_id, interval)
-            t2 = threading.Thread(target=send_to_master, args=(job_id, task_id, interval)) 
+            t2 = threading.Thread(target=send_to_master, args=(job_id, task_id, interval,time.time())) 
             t2.start()
         connection.close()
 
 
 # function to send the response to master
-def send_to_master(job_id, task_id, interval):
+def send_to_master(job_id, task_id, interval,start_time):
     global worker_id
     time.sleep(interval)
     print("After execution of",job_id, task_id, interval)
     s=socket.socket()
     worker_host='localhost'
     master_port=5001
-    finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
+    finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id,"start_time":start_time,"endtime":time.time()}
     s.connect((worker_host,master_port))  
     s.send(json.dumps(finish).encode())
     s.close()

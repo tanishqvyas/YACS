@@ -306,7 +306,7 @@ elif sys.argv[2] == "LL":
 
 f = open(logfile,'w+')
 w = csv.writer(f)
-w.writerow(["Job_Id", "Execution_time"])
+w.writerow(["Job_Id","Task_Id","Execution_time"])
 
 
 
