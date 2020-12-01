@@ -22,6 +22,7 @@ def listen_job_request():
         requests=json.loads(request_json)
         jobId = requests['job_id']
         
+        # Extractinnng the values for a Job
         total_map_tasks=len(requests['job_id']['map_tasks'])
         total_reduce_tasks=len(requests['job_id']['reduce_tasks'])
         
@@ -33,8 +34,22 @@ def listen_job_request():
 
         job_arrival_time=time.time()
         job_completion_time=-1
+        
+        # Creating a dict to append
+        job_to_append = {
+            "total_map_tasks":total_map_tasks,
+            "total_reduce_tasks":total_reduce_tasks,
+            "total_completed_map_tasks":total_completed_map_tasks,
+            "total_completed_reduce_tasks":total_completed_reduce_tasks,
+            "list_map_tasks":list_map_tasks,
+            "list_reduce_tasks":list_reduce_tasks,
+            "job_arrival_time":job_arrival_time,
+            "job_completion_time":job_completion_time,
+            "jobId": jobId
+        }
 
-        JOBS.append()
+        # Appendingh the job
+        JOBS.append(job_to_append)
 
         job.close()
 
@@ -55,6 +70,8 @@ def listen_worker_update():
         WORKER_AVAILABILITY[response["workerid"]]["slots"]+=1
         worker.close()
 
+
+
 # Function to Schedule TASKS
 def send_job_to_worker():
     
@@ -69,8 +86,61 @@ def send_job_to_worker():
             print("No tasks left to schedule")
             time.sleep(1)
         
-        # Extracting task
-        task_to_send={"jobId":JOBS[0][2],"taskId":JOBS[0][0],"interval":JOBS[0][1]}
+        # Extracting task randomly        
+        cur_task_to_send = random.choice(JOBS)
+
+        '''
+        job_to_append = {
+            "total_map_tasks":total_map_tasks,
+            "total_reduce_tasks":total_reduce_tasks,
+            "total_completed_map_tasks":total_completed_map_tasks,
+            "total_completed_reduce_tasks":total_completed_reduce_tasks,
+            "list_map_tasks":list_map_tasks,
+            "list_reduce_tasks":list_reduce_tasks,
+            "job_arrival_time":job_arrival_time,
+            "job_completion_time":job_completion_time,
+            "jobId": jobId
+        }
+        '''
+        
+
+        # -----------------------Checking What should be done for the task----------------
+
+        # check if any map task left to schedule
+        if(len(cur_task_to_send["list_map_tasks"]) > 0):
+            
+            task_to_send = {
+                "jobId": cur_task_to_send["jobID"],
+                "task_id": cur_task_to_send["list_map_tasks"][0]["task_id"],
+                "interval": cur_task_to_send["list_map_tasks"][0]["duration"]
+            }
+
+            # Deletet the task scheduled
+            cur_task_to_send["list_map_tasks"].pop(0)
+
+        else:
+            if(cur_task_to_send["total_map_tasks"] == cur_task_to_send["total_completed_map_tasks"]):
+
+                if(len(cur_task_to_send["list_reduce_tasks"]) > 0):
+                    # Schedule Reduce Tasks
+                    task_to_send = {
+                    "jobId": cur_task_to_send["jobID"],
+                    "task_id": cur_task_to_send["list_reduce_tasks"][0]["task_id"],
+                    "interval": cur_task_to_send["list_reduce_tasks"][0]["duration"]
+                    }
+                    
+                    # Deletet the task scheduled
+                    cur_task_to_send["list_reduce_tasks"].pop(0)
+                
+                # No reduce task left to schedule
+                else:
+                    if((cur_task_to_send["total_completed_reduce_tasks"] == cur_task_to_send["total_reduce_tasks"]):
+                        continue
+                    else:
+                        continue
+                    
+
+
 
         # Random Schedueling
         if(SCHEDUELING_ALGO == "Random"):
