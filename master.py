@@ -96,6 +96,9 @@ def listen_worker_update():
                         break
         if to_remove !=-1:
             #total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
+            with open(logfile,"a") as f:
+                w = csv.writer(f)
+                w.writerow([response["jobId"],time.time(),"end"])
             jobs_lock.acquire()
             JOBS.pop(to_remove)
             jobs_lock.release()
@@ -196,6 +199,9 @@ def send_job_to_worker():
                     # Send the Request
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
+                    with open(logfile,"a") as f:
+                        w = csv.writer(f)
+                        w.writerow([task_to_send["jobId"],time.time(),"start"])
                     s.send(json.dumps(task_to_send).encode())
                     print("Skadoosh : ", task_to_send)
                     JOBS.pop(0)
@@ -306,7 +312,7 @@ elif sys.argv[2] == "LL":
 
 f = open(logfile,'w+')
 w = csv.writer(f)
-w.writerow(["Job_Id","Task_Id","Execution_time"])
+w.writerow(["Job_Id","time","status"])
 
 
 
