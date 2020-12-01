@@ -65,11 +65,27 @@ def listen_worker_update():
     master.listen(20)
     while True:
         worker,address=master.accept()
-        response=worker.recv(1024)
+        response=worker.recv(1024).decode()
+        #worker id, job id, task id
         response=json.loads(response)
+        to_remove=-1
+        for i in range(len(JOBS)):
+            if JOBS[i]["jobId"]==response["jobId"]:
+                if 'M' in response["taskId"]:
+                # Map job
+                    JOBS[i]["total_completed_map_tasks"]+=1
+                    break
+                else:
+                    JOBS[i]["total_completed_reduce_tasks"]+=1
+                    if JOBS[i]["total_completed_reduce_tasks"] == JOBS[i]["total_reduce_tasks"]:
+                        to_remove=i
+                        break
+        if to_remove !=-1:
+            #total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
+            JOBS.pop(to_remove)
+
         WORKER_AVAILABILITY[response["workerid"]]["slots"]+=1
         worker.close()
-
 
 
 # Function to Schedule TASKS
@@ -87,7 +103,9 @@ def send_job_to_worker():
             time.sleep(1)
         
         # Extracting task randomly        
-        cur_task_to_send = random.choice(JOBS)
+        cur_task_to_send = JOBS[0]
+        JOBS.pop(0)
+        JOBS.append(cur_task_to_send)
 
         '''
         job_to_append = {
