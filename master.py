@@ -6,6 +6,8 @@ import random
 import numpy
 import threading
 
+lock = threading.Lock()
+
 #---------- Custom Imports -------------#
 
 def listen_job_request():
@@ -78,7 +80,9 @@ def listen_worker_update():
             if JOBS[i]["jobId"]==response["jobId"]:
                 if 'M' in response["taskId"]:
                 # Map job
+                    lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
+                    lock.release()
                     break
                 else:
                     JOBS[i]["total_completed_reduce_tasks"]+=1
@@ -87,9 +91,13 @@ def listen_worker_update():
                         break
         if to_remove !=-1:
             #total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
+            lock.acquire()
             JOBS.pop(to_remove)
+            lock.release()
 
+        lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
+        lock.release()
 
     worker.close()
 
@@ -108,26 +116,14 @@ def send_job_to_worker():
             print("No tasks left to schedule")
             time.sleep(1)
         
-        # Extracting task randomly        
+        # Extracting task randomly 
+        lock.acquire()       
         cur_task_to_send = JOBS[0]
         JOBS.pop(0)
         JOBS.append(cur_task_to_send)
+        lock.release()
 
-        '''
-        job_to_append = {
-            "total_map_tasks":total_map_tasks,
-            "total_reduce_tasks":total_reduce_tasks,
-            "total_completed_map_tasks":total_completed_map_tasks,
-            "total_completed_reduce_tasks":total_completed_reduce_tasks,
-            "list_map_tasks":list_map_tasks,
-            "list_reduce_tasks":list_reduce_tasks,
-            "job_arrival_time":job_arrival_time,
-            "job_completion_time":job_completion_time,
-            "jobId": jobId
-        }
-        '''
         
-
         # -----------------------Checking What should be done for the task----------------
 
         # check if any map task left to schedule
@@ -187,6 +183,7 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
+                    lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -196,6 +193,7 @@ def send_job_to_worker():
                     s.send(json.dumps(task_to_send).encode())
                     print("Skadoosh : ", task_to_send)
                     JOBS.pop(0)
+                    lock.release()
                     break
 
                 else:
@@ -222,6 +220,7 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
+                    lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -230,6 +229,7 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
+                    lock.release()
                     break
                     
 
@@ -258,6 +258,7 @@ def send_job_to_worker():
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
+                    lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -266,6 +267,7 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     JOBS.pop(0)
+                    lock.release()
                     break
                     
 

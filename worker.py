@@ -6,11 +6,15 @@ import random
 import numpy
 import threading
 
+
+
 sem=threading.Semaphore(1)
 port = int(sys.argv[1])
 worker_id = int(sys.argv[2])
 
-execution_pool=list()
+
+file = open(str(worker_id)+"_log_file.txt", "w+")
+
 
 def listen_from_master():
     s=socket.socket()
@@ -34,6 +38,8 @@ def listen_from_master():
             t2.start()
         connection.close()
 
+
+# function to send the response to master
 def send_to_master(job_id, task_id, interval):
     global worker_id
     time.sleep(interval)
@@ -47,101 +53,9 @@ def send_to_master(job_id, task_id, interval):
     s.close()
 
 
-    '''
-    while(1):
-        
-        for i in execution_pool:
-            execution_pool[i]-=1
-            if(execution_pool[i]<=0):        
-                del execution_pool[i]
-                print(i)
-                finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
-                s.sendall(json.dumps(finish).encode())
-                #sent id to master using thread2
-        time.sleep(1)
-        
-        sem.acquire()
-        for task in range(len(execution_pool)):
-            execution_pool[task][2]-=1
-        
-        to_delete = []
-        for finished in range(len(execution_pool)):
-            if execution_pool[finished][2]<=0:
-                to_delete.append(execution_pool[finished])
-                finish = {"workerId":worker_id,"jobId":execution_pool[finished][0],"taskId":execution_pool[finished][1]}
-                s.send(json.dumps(finish).encode())
-                
-                print("Wapas bhej a hai maal : ", finish)
 
-        for i in to_delete:
-            print("Removed : ", i)
-            execution_pool.remove(i)
-
-
-        # sem.release()
-        time.sleep(1)
-    s.close()
-    '''
-
+# Start the worker
 from_master=threading.Thread(target=listen_from_master())
-#to_master=threading.Thread(target=send_to_master())
 
 from_master.start()
-#to_master.start()
-'''
-from_master.join()
-to_master.join()
-'''
-'''
-#task_id = 0
-# Listen to master
-# get id, interval from master
-# Lock the exec pool when youre adding to list
-execution_pool[task_id]=interval
-task_id = task_id+1
 
-while(1):
-    for i in execution_pool:
-        execution_pool[i]-=1
-        if(execution_pool[i]==0):        
-            del execution_pool[i]
-            #sent id to master using thread2
-    time.sleep(1)
-
-'''
-
-'''
-#As it listens to request - create thread (bcuz master keeps track of number of slots free - so safe to create thread)
-def call_worker(id,interval):
-    t1=threading.Thread(target=worker)
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
-    
-class worker_job:
-    #print("done done")
-    def __init__(self):#,id,interval):
-        self.free_slots=6
-        #self.slots=[]
-        #self.interval=interval
-        #self.id=id
-        self.exec_pool=[]
-
-    def new_job(self,id):
-        self.exec_pool.append(id)
-        print('done')
-        
-    def run_task(self,id,interval):    
-        for i in range(interval):
-            i-=1
-            time.sleep(1)
-        self.exec_pool.remove(id)
-        print('done')
-        
-
-# Create 3 threads for 3 workers
-a=worker_job()
-a.new_job(9)
-a.run_task(9,3)
-'''
