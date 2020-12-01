@@ -42,7 +42,7 @@ def send_to_master():
     while(1):
         for i in execution_pool:
             execution_pool[i]-=1
-            if(execution_pool[i]==0):        
+            if(execution_pool[i]<=0):        
                 del execution_pool[i]
                 finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
                 s.sendall(json.dumps(finish).encode())
