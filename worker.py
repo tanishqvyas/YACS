@@ -1,8 +1,16 @@
-import time
+import socket
 
+def listen_for_master(port):
+  s = socket.socket()            
+  s.bind(('', port))        
+  s.listen(5)               
+  while True:  
+      c, addr = s.accept()       
+      r_json = c.recv(1024)
+      task = json.loads(recv_json)
+      t2 = threading.Thread(target=update_master, args=(task_desc)) 
+      t2.start()
+      c.close()
 
-def worker_func(id, slots, port):
-    
-    for i in range(20):
-        print("Worker : ", id, " doing ", i)
-        time.sleep(1)
+def update_master(task):
+    pass
