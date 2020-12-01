@@ -21,13 +21,11 @@ def listen_job_request():
         # NEED TO STORE TIME OF ARRIVAL FOR ANALYSIS LATER
         requests=json.loads(request_json)
         jobId = requests['job_id']
-
-        JOBS[jobId] = [list(),list(),time.time()]   #maps,reduces
-
+        
         for m in requests['map_tasks']:
-            JOBS[jobId][0].append([m['task_id'], m['duration']])
+            JOBS.append([m['task_id'], m['duration'],jobId])
         for r in requests['reduce_tasks']:
-            [jobId][1].append([r['task_id'], r['duration']])
+            JOBS.append([r['task_id'], r['duration'],jobId])
 
         job.close()
 
@@ -38,7 +36,16 @@ def listen_worker_update():
 def send_job_to_worker():
     
     global SCHEDUELING_ALGO
-    global WORKER_AVAILABILITY 
+    global WORKER_AVAILABILITY
+    global JOBS
+
+    # Check if task available
+    while len(JOBS)==0:
+        print("No tasks left to schedule")
+        time.sleep(1)
+    
+    # Extracting task
+    task_to_send={"jobId":JOBS[0][2],"taskId":JOBS[0][0],"interval":JOBS[0][1]}
 
     # Random Schedueling
     if(SCHEDUELING_ALGO == "Random"):
@@ -63,13 +70,16 @@ def send_job_to_worker():
                     max_slot_worker = wid
                     slot_found = True
             
-            # If SLot if Found Then Send the request
+            # If Slot if Found Then Send the request
             if(slot_found):
                 
                 # Decrease Slot availability by 1
                 WORKER_AVAILABILITY[max_slot_worker] -= 1
 
                 # Send the Request
+                s=socket.socket()
+                
+
 
             else:
                 print("No Slots Found. Sleeping for One Second")
@@ -79,7 +89,7 @@ def send_job_to_worker():
 # Reading the command line arguments
 PATH_TO_CONFIG = sys.argv[1]
 SCHEDUELING_ALGO = sys.argv[2]
-JOBS = []
+JOBS = list()
 
 
 # Reading the config.json
@@ -94,5 +104,7 @@ for worker in configuration["workers"]:
 
 
 # Start the thread to listen to jobs
-t1 = threading.Thread(target = listen_job_request)
-t1.start()
+job_listening_thread = threading.Thread(target = listen_job_request)
+job_listening_thread.start()
+job_scheduling_thread = threading.Thread(target = send_job_to_worker)
+job_scheduling_thread.start()
