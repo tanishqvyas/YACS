@@ -22,10 +22,19 @@ def listen_job_request():
         requests=json.loads(request_json)
         jobId = requests['job_id']
         
-        for m in requests['map_tasks']:
-            JOBS.append([m['task_id'], m['duration'],jobId])
-        for r in requests['reduce_tasks']:
-            JOBS.append([r['task_id'], r['duration'],jobId])
+        total_map_tasks=len(requests['job_id']['map_tasks'])
+        total_reduce_tasks=len(requests['job_id']['reduce_tasks'])
+        
+        total_completed_map_tasks=0
+        total_completed_reduce_tasks=0
+
+        list_map_tasks=requests['job_id']['map_tasks']
+        list_reduce_tasks=requests['job_id']['reduce_tasks']
+
+        job_arrival_time=time.time()
+        job_completion_time=-1
+
+        JOBS.append()
 
         job.close()
 
@@ -172,7 +181,7 @@ def send_job_to_worker():
 # Reading the command line arguments
 PATH_TO_CONFIG = sys.argv[1]
 SCHEDUELING_ALGO = sys.argv[2]
-JOBS = list()
+JOBS = []
 
 
 # Reading the config.json
