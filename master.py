@@ -122,11 +122,10 @@ def send_job_to_worker():
             time.sleep(1)
         
         # Extracting task randomly 
-        lock.acquire()       
+        jobs_lock.acquire()       
         holder = JOBS[0]
         JOBS.pop(0)
         JOBS.append(holder)
-        lock.release()
 
         
         # -----------------------Checking What should be done for the task----------------
@@ -163,7 +162,8 @@ def send_job_to_worker():
                         continue
                     else:
                         continue
-                    
+        
+        jobs_lock.release()            
 
 
 
