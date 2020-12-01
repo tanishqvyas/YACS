@@ -1,4 +1,4 @@
-# Yet Another Centralized Scheduler
+# Yet Another Scheduler
 
 
 
