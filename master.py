@@ -12,7 +12,7 @@ def listen_job_request():
     global JOBS
     master_host='localhost'
     master_port=5000
-    master=socket.socket(socket.AF_INET)
+    master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     master.bind((master_host,master_port))
     master.listen(1)
     while True:
@@ -32,11 +32,18 @@ def listen_job_request():
 
 
 def listen_worker_update():
-    
+
+    #worker_id, job_is, task_id
+    global WORKER_AVAILABILITY
     # Request received from worker
-
-
-
+    master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    master.bind('localhost',5001)
+    master.listen(20)
+    while True:
+        worker,address=master.accept()
+        response=worker.recv(1024)
+        WORKER_AVAILABILITY[response["workerid"]]["slots"]+=1
+        worker.close()
 
 # Function to Schedule TASKS
 def send_job_to_worker():
