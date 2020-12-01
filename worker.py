@@ -23,7 +23,8 @@ def listen_from_master():
     while(True):
         connection,address=s.accept()
         msg=connection.recv(2048).decode()
-        if(msg):
+
+        if(msg != ""):
             requests = json.loads(msg)
             job_id = requests["jobId"]
             task_id = requests["task_id"]
@@ -65,8 +66,9 @@ def send_to_master(job_id, task_id, interval):
         for finished in range(len(execution_pool)):
             if execution_pool[finished][2]<=0:
                 finish = {"workerId":worker_id,"jobId":execution_pool[finished][0],"taskId":execution_pool[finished][1]}
-                s.sendall(json.dumps(finish).encode())
-        sem.release()
+                s.send(json.dumps(finish).encode())
+                print("Wapas bhej a hai maal : ", finish)
+        # sem.release()
         time.sleep(1)
     s.close()
     '''

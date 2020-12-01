@@ -174,7 +174,10 @@ def send_job_to_worker():
             while(not slot_found):
                 max_slot_worker = 0
                 
-                wid = random.choice(workers_list)
+                if(len(workers_list) > 0):
+                    wid = random.choice(workers_list)
+                else:
+                    break
 
                 if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
                     slot_found=True
@@ -236,7 +239,7 @@ def send_job_to_worker():
 
 
         # Least Loaded Schedueling
-        else:
+        elif SCHEDUELING_ALGO == "LL":
             slot_found = False
             max_slots = 0
             max_slot_worker = 0
@@ -289,6 +292,7 @@ for worker in configuration["workers"]:
     WORKER_AVAILABILITY[worker["worker_id"]]["slots"] = worker["slots"]
     WORKER_AVAILABILITY[worker["worker_id"]]["port"] = worker["port"]
 
+print(WORKER_AVAILABILITY)
 
 # Start the thread to listen to jobs
 job_listening_thread = threading.Thread(target = listen_job_request)
