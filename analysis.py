@@ -1,5 +1,7 @@
 import csv
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 jobs=set()
 tasks=[]
@@ -72,11 +74,71 @@ rr_task.sort()
 if(len(rr_task)>0):
     print("Median Job Exceution Time for Random Scheduling: ", rr_task[int((1+len(rr_task))/2)])
 
-# import numpy as np
-# import pandas as pd
-# vect1=np.zeros(10)
-# vect2=np.ones(10)
-# df=pd.DataFrame({'col1':vect1,'col2':vect2})
+#Plotting GRAPHS
 
-# a= df['col1'].tolist()
-# print(a)
+labels = ['Random scheduling','Least loaded', 'Round robin']
+
+means = [sum(random_job) / len(random_job),sum(ll_job) / len(ll_job), sum(rr_job) / len(rr_job) ]
+medians = [random_job[int((1+len(random_job))/2)], ll_job[int((1+len(ll_job))/2)], rr_job[int((1+len(rr_job))/2)]]
+
+x = np.arange(len(labels))  # the label locations
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, means, width, label='Mean')
+rects2 = ax.bar(x + width/2, medians, width, label='Median')
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_ylabel('Time')
+ax.set_title('Mean and median completion time for Jobs vs Scheduling algorithm')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.legend()
+
+
+def autolabel(rects):
+    """Attach a text label above each bar in *rects*, displaying its height."""
+    for rect in rects:
+        height = round(rect.get_height(),3)
+        print("Height",height)
+        ax.annotate('{}'.format(height),
+                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                    xytext=(0, 3),  # 3 points vertical offset
+                    textcoords="offset points",
+                    ha='center', va='bottom')
+
+
+autolabel(rects1)
+autolabel(rects2)
+
+fig.tight_layout()
+plt.show()
+
+# Mean and Median time taken for task Vs Scheduling algorithm
+means = [sum(random_task) / len(random_task),sum(ll_task) / len(ll_task), sum(rr_task) / len(rr_task) ]
+medians = [random_task[int((1+len(random_task))/2)], ll_task[int((1+len(ll_task))/2)], rr_task[int((1+len(rr_task))/2)]]
+
+
+x = np.arange(len(labels))  # the label locations
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, means, width, label='Mean')
+rects2 = ax.bar(x + width/2, medians, width, label='Median')
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+#fig, ax = plt.subplots()
+ax.set_ylabel('Time')
+ax.set_title('Mean and median completion time for Tasks vs Scheduling algorithm')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.legend()
+
+autolabel(rects1)
+autolabel(rects2)
+fig.tight_layout()
+
+plt.show()
+
+
+        
