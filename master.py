@@ -78,11 +78,10 @@ def listen_worker_update():
         to_remove=-1
 
         print("Received : ", response)
-        # print(JOBS)
+
         for i in range(len(JOBS)):
             print("yo",JOBS[i],response, sep="   <--->   ")
             if JOBS[i]["jobId"]==response["jobId"]:
-                print("yo4")
                 
                 if 'M' in response["taskId"]:
                 # Map job
