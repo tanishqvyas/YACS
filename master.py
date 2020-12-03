@@ -123,6 +123,12 @@ def send_job_to_worker():
     global WORKER_AVAILABILITY
     global JOBS
 
+    # Extracting workers list in case of round robin
+    cur_workers = list(WORKER_AVAILABILITY.keys())
+    cur_workers.sort()
+    cur_worker_idx = 0
+    num_workers = 3
+
     while True:
 
         # Check if task available
@@ -241,15 +247,17 @@ def send_job_to_worker():
             while(not slot_found):
 
                 max_slot_worker = 0
-                cur_workers = list(WORKER_AVAILABILITY.keys())
-                cur_workers.sort()
+                
+                while not slot_found:
 
-                for wid in cur_workers:
-
-                    if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
+                    if(WORKER_AVAILABILITY[cur_workers[cur_worker_idx]]["slots"] > 0):
                         slot_found=True
-                        max_slot_worker=wid
+                        max_slot_worker=cur_workers[cur_worker_idx]
+                        cur_worker_idx = (cur_worker_idx+1)%num_workers
                         break
+                    else:
+                        cur_worker_idx = (cur_worker_idx+1)%num_workers
+
                 
                 # If Slot if Found Then Send the request
                 if(slot_found):
