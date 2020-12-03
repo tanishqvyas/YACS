@@ -19,6 +19,11 @@ f = open(logfile, "w+")
 w = csv.writer(f)
 w.writerow(["task_Id","time","start_time","end_time"])
 
+logs=str(worker_id)+"_task_log_file_"+ algo+".csv"
+f = open(logfile, "w+")
+w = csv.writer(f)
+w.writerow(["task_Id","message","time"])
+
 def listen_from_master():
     s=socket.socket()
     worker_host='localhost'
@@ -37,7 +42,11 @@ def listen_from_master():
             task_id = requests["task_id"]
             interval = requests["interval"]
             print("Received : ", job_id, task_id, interval)
-            t2 = threading.Thread(target=send_to_master, args=(job_id, task_id, interval,time.time())) 
+            start_time= time.time()
+            with open(logs,"a") as f:
+                w = csv.writer(f)
+                w.writerow([task_id,"TASK BEGUN",start_time])
+            t2 = threading.Thread(target=send_to_master, args=(job_id, task_id, interval,start_time)) 
             t2.start()
         connection.close()
 
@@ -53,6 +62,9 @@ def send_to_master(job_id, task_id, interval,start_time):
     end_time=time.time()
     total_time=end_time- start_time
     finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
+    with open(logs,"a") as f:
+        w = csv.writer(f)
+        w.writerow([task_id,"TASK END",end_time])
     with open(logfile,"a") as f:
         w = csv.writer(f)
         w.writerow([task_id,total_time,start_time,end_time])
