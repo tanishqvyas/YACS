@@ -89,13 +89,11 @@ def listen_worker_update():
                     # jobs_lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
                     # jobs_lock.release()
-                    print("yo2")
                     break
                 else:
                     # jobs_lock.acquire()
                     JOBS[i]["total_completed_reduce_tasks"]+=1
                     # jobs_lock.release()
-                    print("yo3")
 
                     if JOBS[i]["total_completed_reduce_tasks"] == JOBS[i]["total_reduce_tasks"]:
                         to_remove=i
@@ -147,14 +145,13 @@ def send_job_to_worker():
 
         # -----------------------Checking What should be done for the task----------------
 
-        # print(JOBS, len(JOBS))
         # check if any map task left to schedule
         if(len(JOBS) > 0):
             pass
         else:
             jobs_lock.release()
             continue
-        # print(len(JOBS))
+
         if(len(JOBS[-1]["list_map_tasks"]) > 0):
             
             task_to_send = {
@@ -183,12 +180,10 @@ def send_job_to_worker():
                 # No reduce task left to schedule
                 else:
                     if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
-                        # print("It came here okay")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
                     else:
-                        # print("It came here okay but this is other else")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
@@ -199,13 +194,6 @@ def send_job_to_worker():
                 continue
         
         jobs_lock.release()            
-
-        # print("----------------------------------\n")
-        # print(task_to_send)
-        # print("print len : ", len(JOBS))
-        # print()
-        # print(JOBS)
-        # print("----------------------------------\n\n")
 
 
         # Random Schedueling
@@ -238,7 +226,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
+                    print("Sending Task  :   ", task_to_send)
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -276,7 +264,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
+                    print("Sending Task  :   ", task_to_send)
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -316,7 +304,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
+                    print("Sending Task  :   ", task_to_send)
                     jobs_lock.release()
                     worker_lock.release()
                     break
