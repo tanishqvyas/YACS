@@ -17,13 +17,7 @@ algo = sys.argv[3]
 logfile=str(worker_id)+"_log_file_"+ algo+".csv"
 f = open(logfile, "w+")
 w = csv.writer(f)
-w.writerow(["task_Id","time"])
-
-
-l=str(worker_id)+"_tasks_log_file_"+ algo+".csv"
-f2 = open(l, "w+")
-w2 = csv.writer(f2)
-w2.writerow(["worker_Id","task_Id","start_time","end_time"])
+w.writerow(["task_Id","time","start_time","end_time"])
 
 def listen_from_master():
     s=socket.socket()
@@ -61,10 +55,7 @@ def send_to_master(job_id, task_id, interval,start_time):
     finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
     with open(logfile,"a") as f:
         w = csv.writer(f)
-        w.writerow([task_id,total_time])
-    with open(l,"a") as f:
-        w = csv.writer(f)
-        w.writerow([worker_id,task_id,start_time,end_time])
+        w.writerow([task_id,total_time,start_time,end_time])
     s.connect((worker_host,master_port))  
     s.send(json.dumps(finish).encode())
     s.close()
