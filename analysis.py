@@ -34,14 +34,14 @@ ll_job = master_log_ll["Time"].tolist()
 print("Average Job Time for Least Loaded Scheduling: ", sum(ll_job) / len(ll_job))
 ll_job.sort()
 if(len(ll_job)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", ll_job[int((1+len(ll_job))/2)])
+    print("Median Job Exceution Time for Least Loaded Scheduling: ", ll_job[int((1+len(ll_job))/2)])
 
 
 rr_job = master_log_rr["Time"].tolist()
 print("Average Job Exceution Time for Round Robin Scheduling: ", sum(rr_job) / len(rr_job))
 rr_job.sort()
 if(len(rr_job)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", rr_job[int((1+len(rr_job))/2)])
+    print("Median Job Exceution Time for Round Robin Scheduling: ", rr_job[int((1+len(rr_job))/2)])
 
 
 # Avergae Execution time for tasks
@@ -62,7 +62,7 @@ ll_task.extend(worker3_ll['time'].tolist())
 print("Average Tasks Time for Least Loaded Scheduling : ", sum(ll_task)/ len(ll_task))
 ll_task.sort()
 if(len(ll_task)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", ll_task[int((1+len(ll_task))/2)])
+    print("Median Job Exceution Time for Least Loaded Scheduling: ", ll_task[int((1+len(ll_task))/2)])
 
 
 rr_task = []
@@ -72,7 +72,7 @@ rr_task.extend(worker3_rr['time'].tolist())
 print("Average Tasks Time for Round Robin Scheduling : ", sum(rr_task)/ len(rr_task))
 rr_task.sort()
 if(len(rr_task)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", rr_task[int((1+len(rr_task))/2)])
+    print("Median Job Exceution Time for Round Robin Scheduling: ", rr_task[int((1+len(rr_task))/2)])
 
 #Plotting GRAPHS
 
