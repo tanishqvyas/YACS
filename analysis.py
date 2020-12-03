@@ -25,15 +25,26 @@ worker3_Random=pd.read_csv("3_log_file_Random.csv")
 
 # Avergae Job exectuion time
 random_job = master_log_random["Time"].tolist()
+
 print("Average Job Exceution Time for Random Scheduling: ", sum(random_job) / len(random_job))
 random_job.sort()
 if(len(random_job)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", random_job[int((1+len(random_job))/2)])
+    if(len(random_job)%2 == 0):
+        median_random = (random_job[int(len(random_job))/2)] + random_job[int(len(random_job))+2/2)])/2
+    else:
+        median_random = random_job[int((1+len(random_job))/2)]
+
+        print("Median Job Exceution Time for Random Scheduling: ", median_random)
 
 ll_job = master_log_ll["Time"].tolist()
 print("Average Job Time for Least Loaded Scheduling: ", sum(ll_job) / len(ll_job))
 ll_job.sort()
 if(len(ll_job)>0):
+    if(len(ll_job)%2 == 0):
+        median_ll = (ll_job[int(len(ll_job))/2)] + ll_job[int(len(ll_job))+2/2)])/2
+    else:
+        median_ll = ll_job[int((1+len(ll_job))/2)]
+
     print("Median Job Exceution Time for Least Loaded Scheduling: ", ll_job[int((1+len(ll_job))/2)])
 
 
@@ -41,6 +52,10 @@ rr_job = master_log_rr["Time"].tolist()
 print("Average Job Exceution Time for Round Robin Scheduling: ", sum(rr_job) / len(rr_job))
 rr_job.sort()
 if(len(rr_job)>0):
+    if(len(rr_job)%2 == 0):
+        median_rr = (rr_job[int(len(rr_job))/2)] + rr_job[int(len(rr_job))+2/2)])/2
+    else:
+        median_rr = rr_job[int((1+len(rr_job))/2)]
     print("Median Job Exceution Time for Round Robin Scheduling: ", rr_job[int((1+len(rr_job))/2)])
 
 
@@ -52,7 +67,11 @@ random_task.extend(worker3_Random['time'].tolist())
 print("Average Tasks Time for Random Scheduling : ", sum(random_task)/ len(random_task))
 random_task.sort()
 if(len(random_task)>0):
-    print("Median Job Exceution Time for Random Scheduling: ", random_task[int((1+len(random_task))/2)])
+    if(len(random_task)%2 == 0):
+        t_median_random = (random_task[int(len(random_task))/2)] + random_task[int(len(random_task))+2/2)])/2
+    else:
+        t_median_random = random_task[int((1+len(random_task))/2)]
+    print("Median Job Exceution Time for Random Scheduling: ", t_median_random])
 
 
 ll_task = []
@@ -61,8 +80,13 @@ ll_task.extend(worker2_ll['time'].tolist())
 ll_task.extend(worker3_ll['time'].tolist())
 print("Average Tasks Time for Least Loaded Scheduling : ", sum(ll_task)/ len(ll_task))
 ll_task.sort()
+
 if(len(ll_task)>0):
-    print("Median Job Exceution Time for Least Loaded Scheduling: ", ll_task[int((1+len(ll_task))/2)])
+    if(len(ll_task)%2 == 0):
+        t_median_ll = (ll_task[int(len(ll_task))/2)] + ll_task[int(len(ll_task))+2/2)])/2
+    else:
+        t_median_ll = ll_task[int((1+len(ll_task))/2)]
+    print("Median Job Exceution Time for Least Loaded Scheduling: ", t_median_ll)
 
 
 rr_task = []
@@ -72,7 +96,11 @@ rr_task.extend(worker3_rr['time'].tolist())
 print("Average Tasks Time for Round Robin Scheduling : ", sum(rr_task)/ len(rr_task))
 rr_task.sort()
 if(len(rr_task)>0):
-    print("Median Job Exceution Time for Round Robin Scheduling: ", rr_task[int((1+len(rr_task))/2)])
+    if(len(rr_task)%2 == 0):
+        t_median_rr = (rr_task[int(len(rr_task))/2)] + rr_task[int(len(rr_task))+2/2)])/2
+    else:
+        t_median_rr = rr_task[int((1+len(rr_task))/2)]
+    print("Median Job Exceution Time for Round Robin Scheduling: ", t_median_rr)
 
 #Plotting GRAPHS
 
