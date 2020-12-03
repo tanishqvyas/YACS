@@ -80,7 +80,7 @@ def listen_worker_update():
         print("Received : ", response)
 
         for i in range(len(JOBS)):
-            print("yo",JOBS[i],response, sep="   <--->   ")
+
             if JOBS[i]["jobId"]==response["jobId"]:
                 
                 if 'M' in response["taskId"]:
