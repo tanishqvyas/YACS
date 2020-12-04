@@ -12,9 +12,7 @@ worker_lock = threading.Lock()
 task_lock = threading.Lock()
 log_lock = threading.Lock()
 
-
-#---------- Custom Imports -------------#
-
+# Master listens to job requests from port 5000
 def listen_job_request():
     global JOBS
     master_host='localhost'
@@ -25,13 +23,13 @@ def listen_job_request():
     while True:
         job,address=master.accept()
         request_json=job.recv(2048).decode()
-        # NEED TO STORE TIME OF ARRIVAL FOR ANALYSIS LATER
+        # Request is loaded
         requests=json.loads(request_json)
         jobId = requests['job_id']
         
         print(requests)
 
-        # Extractinnng the values for a Job
+        # Extracting the values of attributes for a Job
         total_map_tasks=len(requests['map_tasks'])
         total_reduce_tasks=len(requests['reduce_tasks'])
         
@@ -43,7 +41,7 @@ def listen_job_request():
 
         job_arrival_time=time.time()
         
-        # Creating a dict to append
+        # Creating a dictionary to append
         job_to_append = {
             "total_map_tasks":total_map_tasks,
             "total_reduce_tasks":total_reduce_tasks,
@@ -55,7 +53,7 @@ def listen_job_request():
             "jobId": jobId
         }
         
-        # Appending the job
+        # Appending the dictionary to list of jobs
         jobs_lock.acquire()
         JOBS.append(job_to_append)
         jobs_lock.release()
@@ -63,75 +61,94 @@ def listen_job_request():
         job.close()
 
 
-
+# Master listens to updates from workers
 def listen_worker_update():
-    
-    #worker_id, job_is, task_id
+
     global WORKER_AVAILABILITY
     # Request received from worker
+    worker_lock.acquire()
+    cur_workers = list(WORKER_AVAILABILITY.keys())
+    worker_lock.release()
+    cur_workers.sort()
+    cur_worker_idx = 0
+    num_workers = 3
+
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     master.bind(('localhost',5001))
     master.listen(100)
     while True:
         worker, address = master.accept()
+        # Task completion message received from worker
         response=worker.recv(2048).decode()
-        #worker id, job id, task id
+        # Response contains worker id, job id, task id
         response=json.loads(response)
         to_remove=-1
 
         print("Received : ", response)
-        # print(JOBS)
 
         jobs_lock.acquire()
         length=len(JOBS)
         jobs_lock.release()
 
         for i in range(length):
-            print("yo",JOBS[i],response, sep="   <--->   ")
+
             jobs_lock.acquire()
-            job_i=JOBS[i]
-            jobs_lock.release()
-            if job_i["jobId"]==response["jobId"]:
-                
-                print("yo4")
-                
+            if JOBS[i]["jobId"]==response["jobId"]:
+                jobs_lock.release()
+                # Checking if job completed is a map job
                 if 'M' in response["taskId"]:
-                # Map job
+                    # Decrease count of number of map jobs
                     jobs_lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
                     jobs_lock.release()
-                    print("yo2")
                     break
                 else:
+                    # Not map job => Reduce job
+                    # Decrease count of number of reduce jobs
                     jobs_lock.acquire()
                     JOBS[i]["total_completed_reduce_tasks"]+=1
                     jobs_lock.release()
-                    print("yo3")
 
+                    # If all reduce jobs are completed
                     jobs_lock.acquire()
                     if JOBS[i]["total_completed_reduce_tasks"] == JOBS[i]["total_reduce_tasks"]:
                         jobs_lock.release()
+                        # Job has to be removed from jobs list
                         to_remove=i
                         break
                     else:
                         jobs_lock.release()
+            else:
+                jobs_lock.release()
                     
         if to_remove !=-1:
 
             print("JOB : ",response["jobId"], " Completed.")
             jobs_lock.acquire()
+            # Calculating job execution time
             total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
             jobs_lock.release()
-        #with open(logfile,"a") as f:
-            w = csv.writer(f)
-            w.writerow([response["jobId"],total_time])
+
+            with open(logfile,"a") as f:
+                w = csv.writer(f)
+                w.writerow([response["jobId"],total_time])
             jobs_lock.acquire()
+            # Remove job from jobs list
             JOBS.pop(to_remove)
             jobs_lock.release()
 
+        # Modifying number of free slots in the worker
         worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
         worker_lock.release()
+        time_recv=time.time()
+        for i in range(num_workers):
+            with open("tasks_"+logfile,'a') as f:
+                w = csv.writer(f)
+                worker_lock.acquire()
+                w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_recv])
+                worker_lock.release()
+                    
 
     worker.close()
 
@@ -144,7 +161,9 @@ def send_job_to_worker():
     global JOBS
 
     # Extracting workers list in case of round robin
+    worker_lock.acquire()
     cur_workers = list(WORKER_AVAILABILITY.keys())
+    worker_lock.release()
     cur_workers.sort()
     cur_worker_idx = 0
     num_workers = 3
@@ -155,6 +174,7 @@ def send_job_to_worker():
         jobs_lock.acquire()
         length=len(JOBS)
         jobs_lock.release()
+
         while length==0:
             print("No Jobs left to schedule")
             jobs_lock.acquire()
@@ -168,12 +188,10 @@ def send_job_to_worker():
             pass
         else:
             jobs_lock.release()
-            continue   
-        
-        # Extracting task randomly 
+            continue  
+
+        # Jobs are scheduled in FCFS manner
         holder = JOBS[0]
-        # JOBS.pop(0)
-        # JOBS.append(holder)
 
         # -----------------------Checking What should be done for the task----------------
 
@@ -184,34 +202,36 @@ def send_job_to_worker():
             jobs_lock.release()
             continue
 
-        if(len(JOBS[-1]["list_map_tasks"]) > 0):
+        # If map tasks are yet to be sent to workers
+        if(len(JOBS[0]["list_map_tasks"]) > 0):
             
             task_to_send = {
-                "jobId": JOBS[-1]["jobId"],
-                "task_id": JOBS[-1]["list_map_tasks"][0]["task_id"],
-                "interval": JOBS[-1]["list_map_tasks"][0]["duration"]
+                "jobId": JOBS[0]["jobId"],
+                "task_id": JOBS[0]["list_map_tasks"][0]["task_id"],
+                "interval": JOBS[0]["list_map_tasks"][0]["duration"]
             }
 
-            # Deletet the task scheduled
-            JOBS[-1]["list_map_tasks"].pop(0)
+            # Delete the task that has been scheduled
+            JOBS[0]["list_map_tasks"].pop(0)
            
         else:
-            if(JOBS[-1]["total_map_tasks"] == JOBS[-1]["total_completed_map_tasks"]):
+            # If all map tasks have been completed i.e. no map tasks is being executed by a worker
+            if(JOBS[0]["total_map_tasks"] == JOBS[0]["total_completed_map_tasks"]):
 
-                if(len(JOBS[-1]["list_reduce_tasks"]) > 0):
+                if(len(JOBS[0]["list_reduce_tasks"]) > 0):
                     # Schedule Reduce Tasks
                     task_to_send = {
-                    "jobId": JOBS[-1]["jobId"],
-                    "task_id": JOBS[-1]["list_reduce_tasks"][0]["task_id"],
-                    "interval": JOBS[-1]["list_reduce_tasks"][0]["duration"]
+                    "jobId": JOBS[0]["jobId"],
+                    "task_id": JOBS[0]["list_reduce_tasks"][0]["task_id"],
+                    "interval": JOBS[0]["list_reduce_tasks"][0]["duration"]
                     }
                     
-                    # Deletet the task scheduled
-                    JOBS[-1]["list_reduce_tasks"].pop(0)
+                    # Delete the task scheduled
+                    JOBS[0]["list_reduce_tasks"].pop(0)
                 
                 # No reduce task left to schedule
                 else:
-                    if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
+                    if(JOBS[0]["total_completed_reduce_tasks"] == JOBS[0]["total_reduce_tasks"]):
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
@@ -228,14 +248,13 @@ def send_job_to_worker():
         jobs_lock.release()            
 
 
-        # Random Schedueling
+        # Random Scheduling
         if(SCHEDUELING_ALGO == "Random"):
             slot_found = False
 
-            worker_lock.acquire()
             workers_list = list(WORKER_AVAILABILITY.keys())
-            worker_lock.release()
 
+            # Randomly choosing a worker
             while(not slot_found):
                 max_slot_worker = 0
                 
@@ -245,16 +264,16 @@ def send_job_to_worker():
                     break
 
                 worker_lock.acquire()
-                if(WORKER_AVAILABILITY[wid]["slots"] > 0):                    
+                # Check if chosen worker has free slot
+                if(WORKER_AVAILABILITY[wid]["slots"] > 0):                     
                     slot_found=True
                     max_slot_worker=wid
                 worker_lock.release()
-
+                
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
                     worker_lock.acquire()
-                    #jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -263,7 +282,13 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
-                    #jobs_lock.release()
+
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
+                    
                     worker_lock.release()
                     break
 
@@ -271,7 +296,7 @@ def send_job_to_worker():
                     workers_list.remove(wid)
 
 
-        # Round Robin Schedueling
+        # Round Robin Scheduling
         elif(SCHEDUELING_ALGO == "RR"):
             
             slot_found = False
@@ -280,22 +305,22 @@ def send_job_to_worker():
                 max_slot_worker = 0
                 
                 while not slot_found:
-
+                    worker_lock.acquire()
                     if(WORKER_AVAILABILITY[cur_workers[cur_worker_idx]]["slots"] > 0):
+                        worker_lock.release()
                         slot_found=True
                         max_slot_worker=cur_workers[cur_worker_idx]
                         cur_worker_idx = (cur_worker_idx+1)%num_workers
                         break
                     else:
+                        worker_lock.release()
                         cur_worker_idx = (cur_worker_idx+1)%num_workers
 
                 
                 # If Slot if Found Then Send the request
-                if(slot_found):
-                    
-                    worker_lock.acquire()
-                    jobs_lock.acquire()
+                if(slot_found):                    
                     # Decrease Slot availability by 1
+                    worker_lock.acquire()
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
                     # Send the Request
@@ -303,7 +328,13 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
-                    jobs_lock.release()
+
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
+                    
                     worker_lock.release()
                     break
                     
@@ -314,13 +345,14 @@ def send_job_to_worker():
             
 
 
-        # Least Loaded Schedueling
+        # Least Loaded Scheduling
         elif SCHEDUELING_ALGO == "LL":
             slot_found = False
             max_slots = 0
             max_slot_worker = 0
             while(not slot_found):
 
+                # Find which worker is least loaded - i.e. Has maximum number of free slots
                 for wid, _ in WORKER_AVAILABILITY.items():
 
                     if(WORKER_AVAILABILITY[wid]["slots"] > max_slots): 
@@ -334,7 +366,6 @@ def send_job_to_worker():
                 if(slot_found):
                     
                     worker_lock.acquire()
-                    jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -343,7 +374,11 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
-                    jobs_lock.release()
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
                     worker_lock.release()
                     break
                     
@@ -371,9 +406,13 @@ elif sys.argv[2] == "RR":
 elif sys.argv[2] == "LL":
     logfile = "Masterlogs_LL.csv"
 
-f = open(logfile,'w+')
-w = csv.writer(f)
-w.writerow(["Job_Id","Time"])
+with open(logfile,'w+') as f:
+    w = csv.writer(f)
+    w.writerow(["Job_Id","Time"])
+
+with open("tasks_"+logfile,'w+') as f:
+    w = csv.writer(f)
+    w.writerow(["Worker_id","No_Tasks","Time"])
 
 
 
@@ -387,6 +426,7 @@ for worker in configuration["workers"]:
     WORKER_AVAILABILITY[worker["worker_id"]] = {}
     WORKER_AVAILABILITY[worker["worker_id"]]["slots"] = worker["slots"]
     WORKER_AVAILABILITY[worker["worker_id"]]["port"] = worker["port"]
+    WORKER_AVAILABILITY[worker["worker_id"]]["maxcapacity"] = worker["slots"]
 
 print(WORKER_AVAILABILITY)
 
@@ -394,8 +434,10 @@ print(WORKER_AVAILABILITY)
 job_listening_thread = threading.Thread(target = listen_job_request)
 job_listening_thread.start()
 
+# Schedules tasks and sends them to worker for completion
 job_scheduling_thread = threading.Thread(target = send_job_to_worker)
 job_scheduling_thread.start()
 
+# Listens to update from workers about completed tasks
 worker_updates_thread = threading.Thread(target = listen_worker_update)
 worker_updates_thread.start()
