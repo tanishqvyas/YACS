@@ -146,15 +146,12 @@ ax.legend()
 
 
 def value_of_bar(bars):
-    """Attach a text label above each bar in *bars*, displaying its height."""
+    # Attaches label above each bar in the graph
+    # The label represents the height of the graph
     for rect in bars:
         height = round(rect.get_height(),3)
         print("Height",height)
-        ax.annotate('{}'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, height),
-                    xytext=(0, 3),  # 3 points vertical offset
-                    textcoords="offset points",
-                    ha='center', va='bottom')
+        ax.annotate('{}'.format(height),xy=(rect.get_x() + rect.get_width() / 2, height),xytext=(0, 3),textcoords="offset points",ha='center', va='bottom')
 
 
 value_of_bar(bars1)
