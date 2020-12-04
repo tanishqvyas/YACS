@@ -71,7 +71,7 @@ if(len(random_task)>0):
         t_median_random = (random_task[int((len(random_task))/2)] + random_task[int((len(random_task)+2)/2)])/2
     else:
         t_median_random = random_task[int((1+len(random_task))/2)]
-    print("Median Job Exceution Time for Random Scheduling: ", t_median_random)
+    print("Median Tasks Exceution Time for Random Scheduling: ", t_median_random)
 
 
 ll_task = []
@@ -86,7 +86,7 @@ if(len(ll_task)>0):
         t_median_ll = (ll_task[int((len(ll_task))/2)] + ll_task[int((len(ll_task)+2)/2)])/2
     else:
         t_median_ll = ll_task[int((1+len(ll_task))/2)]
-    print("Median Job Exceution Time for Least Loaded Scheduling: ", t_median_ll)
+    print("Median Tasks Exceution Time for Least Loaded Scheduling: ", t_median_ll)
 
 
 rr_task = []
@@ -100,7 +100,7 @@ if(len(rr_task)>0):
         t_median_rr = (rr_task[int((len(rr_task))/2)] + rr_task[int((len(rr_task)+2)/2)])/2
     else:
         t_median_rr = rr_task[int((1+len(rr_task))/2)]
-    print("Median Job Exceution Time for Round Robin Scheduling: ", t_median_rr)
+    print("Median Tasks Exceution Time for Round Robin Scheduling: ", t_median_rr)
 
 #Plotting GRAPHS
 
