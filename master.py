@@ -6,7 +6,14 @@ import random
 import numpy
 import threading
 import csv
+'''
+This file is used to run the master for YACS.
+It listens to incoming job requests and schedules the tasks to different slots on workers
+It uses RR, LL and Random scheduling algorithms to do the same
+It also logs task and job execution details for further analysis
+'''
 
+# Locks to protect shared variables
 jobs_lock = threading.Lock()
 worker_lock = threading.Lock()
 task_lock = threading.Lock()
@@ -15,6 +22,7 @@ log_lock = threading.Lock()
 # Master listens to job requests from port 5000
 def listen_job_request():
     global JOBS
+    # This host name can be changed if the the worker and master are on different machines
     master_host='localhost'
     master_port=5000
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -32,7 +40,8 @@ def listen_job_request():
         # Extracting the values of attributes for a Job
         total_map_tasks=len(requests['map_tasks'])
         total_reduce_tasks=len(requests['reduce_tasks'])
-        
+
+        # Variables to store the number of completed map and reduce tasks
         total_completed_map_tasks=0
         total_completed_reduce_tasks=0
 
@@ -41,7 +50,7 @@ def listen_job_request():
 
         job_arrival_time=time.time()
         
-        # Creating a dictionary to append
+        # Creating a job with various features
         job_to_append = {
             "total_map_tasks":total_map_tasks,
             "total_reduce_tasks":total_reduce_tasks,
@@ -71,7 +80,7 @@ def listen_worker_update():
     worker_lock.release()
     cur_workers.sort()
     cur_worker_idx = 0
-    num_workers = 3
+    num_workers = 3 # This value can be increased if more workers are present
 
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     master.bind(('localhost',5001))
@@ -122,7 +131,7 @@ def listen_worker_update():
                 jobs_lock.release()
                     
         if to_remove !=-1:
-
+            # Job has been completed and must be removed from the list of jobs
             print("JOB : ",response["jobId"], " Completed.")
             jobs_lock.acquire()
             # Calculating job execution time
