@@ -168,34 +168,34 @@ def send_job_to_worker():
             jobs_lock.release()
             continue
 
-        if(len(JOBS[-1]["list_map_tasks"]) > 0):
+        if(len(JOBS[0]["list_map_tasks"]) > 0):
             
             task_to_send = {
-                "jobId": JOBS[-1]["jobId"],
-                "task_id": JOBS[-1]["list_map_tasks"][0]["task_id"],
-                "interval": JOBS[-1]["list_map_tasks"][0]["duration"]
+                "jobId": JOBS[0]["jobId"],
+                "task_id": JOBS[0]["list_map_tasks"][0]["task_id"],
+                "interval": JOBS[0]["list_map_tasks"][0]["duration"]
             }
 
             # Deletet the task scheduled
-            JOBS[-1]["list_map_tasks"].pop(0)
+            JOBS[0]["list_map_tasks"].pop(0)
            
         else:
-            if(JOBS[-1]["total_map_tasks"] == JOBS[-1]["total_completed_map_tasks"]):
+            if(JOBS[0]["total_map_tasks"] == JOBS[0]["total_completed_map_tasks"]):
 
-                if(len(JOBS[-1]["list_reduce_tasks"]) > 0):
+                if(len(JOBS[0]["list_reduce_tasks"]) > 0):
                     # Schedule Reduce Tasks
                     task_to_send = {
-                    "jobId": JOBS[-1]["jobId"],
-                    "task_id": JOBS[-1]["list_reduce_tasks"][0]["task_id"],
-                    "interval": JOBS[-1]["list_reduce_tasks"][0]["duration"]
+                    "jobId": JOBS[0]["jobId"],
+                    "task_id": JOBS[0]["list_reduce_tasks"][0]["task_id"],
+                    "interval": JOBS[0]["list_reduce_tasks"][0]["duration"]
                     }
                     
                     # Deletet the task scheduled
-                    JOBS[-1]["list_reduce_tasks"].pop(0)
+                    JOBS[0]["list_reduce_tasks"].pop(0)
                 
                 # No reduce task left to schedule
                 else:
-                    if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
+                    if(JOBS[0]["total_completed_reduce_tasks"] == JOBS[0]["total_reduce_tasks"]):
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
