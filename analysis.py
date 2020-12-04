@@ -3,8 +3,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+'''
+This file is used to analyse the log files created by YACS.
+It compares the mean and median execution times for jobs and tasks
+This is done for each of the Scheduling Algorithms - RR, LL and Random
+'''
+
 jobs=set()
 tasks=[]
+
+# Reading all the created log files in multiple runs with various scheduling algorithms
 
 master_log_random=pd.read_csv("Masterlogs_Random.csv")
 master_log_rr=pd.read_csv("Masterlogs_RR.csv")
@@ -23,57 +31,66 @@ worker2_Random=pd.read_csv("2_log_file_Random.csv")
 worker3_Random=pd.read_csv("3_log_file_Random.csv")
 
 
-# Avergae Job exectuion time
+# Calculating Avergae Job Execution Time for Random Scheduling
 random_job = master_log_random["Time"].tolist()
 
-print("Average Job Exceution Time for Random Scheduling: ", sum(random_job) / len(random_job))
+print("Average Job Execution Time for Random Scheduling: ", sum(random_job) / len(random_job))
 random_job.sort()
+
+# Calculating Median of the Job Execution Times for Random Scheduling
 if(len(random_job)>0):
     if(len(random_job)%2 == 0):
         median_random = (random_job[int((len(random_job))/2)] + random_job[int((len(random_job)+2)/2)])/2
     else:
         median_random = random_job[int((1+len(random_job))/2)]
 
-        print("Median Job Exceution Time for Random Scheduling: ", median_random)
+        print("Median Job Execution Time for Random Scheduling: ", median_random)
 
+# Calculating Average Job Execution Time for Least Loaded Scheduling
 ll_job = master_log_ll["Time"].tolist()
-print("Average Job Time for Least Loaded Scheduling: ", sum(ll_job) / len(ll_job))
+print("Average Job Execution Time for Least Loaded Scheduling: ", sum(ll_job) / len(ll_job))
 ll_job.sort()
+
+# Calculating Median of the Job Execution Times for Least Loaded Scheduling
 if(len(ll_job)>0):
     if(len(ll_job)%2 == 0):
         median_ll = (ll_job[int((len(ll_job))/2)] + ll_job[int((len(ll_job)+2)/2)])/2
     else:
         median_ll = ll_job[int((1+len(ll_job))/2)]
 
-    print("Median Job Exceution Time for Least Loaded Scheduling: ", ll_job[int((1+len(ll_job))/2)])
+    print("Median Job Execution Time for Least Loaded Scheduling: ", ll_job[int((1+len(ll_job))/2)])
 
 
 rr_job = master_log_rr["Time"].tolist()
-print("Average Job Exceution Time for Round Robin Scheduling: ", sum(rr_job) / len(rr_job))
+print("Average Job Execution Time for Round Robin Scheduling: ", sum(rr_job) / len(rr_job))
 rr_job.sort()
+
+# Calculating Median of the Job Execution Times for Round Robin Scheduling
 if(len(rr_job)>0):
     if(len(rr_job)%2 == 0):
         median_rr = (rr_job[int((len(rr_job))/2)] + rr_job[int((len(rr_job)+2)/2)])/2
     else:
         median_rr = rr_job[int((1+len(rr_job))/2)]
-    print("Median Job Exceution Time for Round Robin Scheduling: ", rr_job[int((1+len(rr_job))/2)])
+    print("Median Job Execution Time for Round Robin Scheduling: ", rr_job[int((1+len(rr_job))/2)])
 
 
-# Avergae Execution time for tasks
+# Calculating Average Task Execution Time for Random Scheduling
 random_task = []
 random_task.extend(worker1_Random['time'].tolist())
 random_task.extend(worker2_Random['time'].tolist())
 random_task.extend(worker3_Random['time'].tolist())
 print("Average Tasks Time for Random Scheduling : ", sum(random_task)/ len(random_task))
 random_task.sort()
+
+# Calculating Median of the Task Execution Times for Random Scheduling
 if(len(random_task)>0):
     if(len(random_task)%2 == 0):
         t_median_random = (random_task[int((len(random_task))/2)] + random_task[int((len(random_task)+2)/2)])/2
     else:
         t_median_random = random_task[int((1+len(random_task))/2)]
-    print("Median Tasks Exceution Time for Random Scheduling: ", t_median_random)
+    print("Median Tasks Execution Time for Random Scheduling: ", t_median_random)
 
-
+# Calculating Average Task Execution Time for Least Loaded Scheduling
 ll_task = []
 ll_task.extend(worker1_ll['time'].tolist())
 ll_task.extend(worker2_ll['time'].tolist())
@@ -81,26 +98,30 @@ ll_task.extend(worker3_ll['time'].tolist())
 print("Average Tasks Time for Least Loaded Scheduling : ", sum(ll_task)/ len(ll_task))
 ll_task.sort()
 
+# Calculating Median of the Task Execution Times for Least Loaded Scheduling
 if(len(ll_task)>0):
     if(len(ll_task)%2 == 0):
         t_median_ll = (ll_task[int((len(ll_task))/2)] + ll_task[int((len(ll_task)+2)/2)])/2
     else:
         t_median_ll = ll_task[int((1+len(ll_task))/2)]
-    print("Median Tasks Exceution Time for Least Loaded Scheduling: ", t_median_ll)
+    print("Median Tasks Execution Time for Least Loaded Scheduling: ", t_median_ll)
 
 
+# Calculating Average Task Execution Time for Round Robin Scheduling
 rr_task = []
 rr_task.extend(worker1_rr['time'].tolist())
 rr_task.extend(worker2_rr['time'].tolist())
 rr_task.extend(worker3_rr['time'].tolist())
 print("Average Tasks Time for Round Robin Scheduling : ", sum(rr_task)/ len(rr_task))
 rr_task.sort()
+
+# Calculating Median of the Task Execution Times for Round Robin Scheduling
 if(len(rr_task)>0):
     if(len(rr_task)%2 == 0):
         t_median_rr = (rr_task[int((len(rr_task))/2)] + rr_task[int((len(rr_task)+2)/2)])/2
     else:
         t_median_rr = rr_task[int((1+len(rr_task))/2)]
-    print("Median Tasks Exceution Time for Round Robin Scheduling: ", t_median_rr)
+    print("Median Tasks Execution Time for Round Robin Scheduling: ", t_median_rr)
 
 #Plotting GRAPHS
 
@@ -110,7 +131,7 @@ means = [sum(random_job) / len(random_job),sum(ll_job) / len(ll_job), sum(rr_job
 medians = [median_random,median_ll,median_rr]
 
 x = np.arange(len(labels))  # the label locations
-width = 0.35  # the width of the bars
+width = 0.35                # the width of the bars
 
 fig, ax = plt.subplots()
 rects1 = ax.bar(x - width/2, means, width, label='Mean')
@@ -148,14 +169,13 @@ medians = [t_median_random,t_median_ll,t_median_rr]
 
 
 x = np.arange(len(labels))  # the label locations
-width = 0.35  # the width of the bars
+width = 0.35                # the width of the bars
 
 fig, ax = plt.subplots()
 rects1 = ax.bar(x - width/2, means, width, label='Mean')
 rects2 = ax.bar(x + width/2, medians, width, label='Median')
 
-# Add some text for labels, title and custom x-axis tick labels, etc.
-#fig, ax = plt.subplots()
+# Adding titles and labels
 ax.set_ylabel('Time')
 ax.set_title('Mean and median completion time for Tasks vs Scheduling algorithm')
 ax.set_xticks(x)
@@ -166,39 +186,16 @@ autolabel(rects1)
 autolabel(rects2)
 fig.tight_layout()
 
+# VISUAL REPRESENTATION OF PART 2 RESULT 1
 plt.show()
 
 
-# def task_plot(algo):
-#     x_axis = dict()
-#     y_axis = dict()
-#     numberOfTasks=dict()
-#     #graph[worker_id]=[]
-#     lines=open(i).read().split("\n")
-#     numberOfTasks[worker_id]=0
-    
-#     for line in lines[1:]:
-#         if line:
-#             print(line)
-#             values = line.split(",")
-#             wid=values[0]
-#             message=values[1].strip()
-#             time = values[2]
-#     fig, ax = plt.subplots(figsize=(25, 5))
-#     ax.plot(x_axis[1], y_axis[1], 'g', label="Worker 1")
-#     ax.plot(x_axis[2], y_axis[2], 'r', label="Worker 2")
-#     ax.plot(x_axis[3], y_axis[3], 'b', label="Worker 3")
-#     ax.set_xlabel('Time')
-#     ax.set_ylabel('No of tasks in the Worker')
-#     legend = ax.legend(loc='best')
-#     plt.show()
-
-
-#for i in ["tasks_Masterlogs_Random.csv","tasks_Masterlogs_RR.csv","tasks_Masterlogs_LL.csv"]:
-    # task_plot(i)
-
+# REPRESENTING PART 2 RESULT 2
+# Plots the	number of tasks	scheduled on each machine, against time
+# for each scheduling algorithm	
 
 def task_plot(file_name):
+    # Opening the log files with times at which tasks were sent and received
     to_plot=open("tasks_Masterlogs_"+file_name+".csv").read().split("\n")
     workers=dict()
     timestamps=dict()
@@ -221,7 +218,7 @@ def task_plot(file_name):
     ax.set_ylabel('No of tasks in the Worker')
     legend = ax.legend(loc='best')
     plt.show()
-
+# Creating the plots for all 3 scheduling algorithms
 task_plot("Random")
 task_plot("RR")
 task_plot("LL")
