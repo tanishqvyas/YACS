@@ -67,6 +67,11 @@ def listen_worker_update():
     #worker_id, job_is, task_id
     global WORKER_AVAILABILITY
     # Request received from worker
+    cur_workers = list(WORKER_AVAILABILITY.keys())
+    cur_workers.sort()
+    cur_worker_idx = 0
+    num_workers = 3
+
     master=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     master.bind(('localhost',5001))
     master.listen(100)
@@ -112,6 +117,12 @@ def listen_worker_update():
         # worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
         # worker_lock.release()
+        time_recv=time.time()
+        for i in range(num_workers):
+            with open("tasks_"+logfile,'a') as f:
+                w = csv.writer(f)
+                w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_recv])
+                    
 
     worker.close()
 
@@ -232,6 +243,13 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
+
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
+                    
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -272,6 +290,13 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
+
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
+                    
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -312,6 +337,11 @@ def send_job_to_worker():
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
+                    time_sent=time.time()
+                    for i in range(num_workers):
+                        with open("tasks_"+logfile,'a') as f:
+                            w = csv.writer(f)
+                            w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -344,6 +374,10 @@ with open(logfile,'w+') as f:
     w = csv.writer(f)
     w.writerow(["Job_Id","Time"])
 
+with open("tasks_"+logfile,'w+') as f:
+    w = csv.writer(f)
+    w.writerow(["Worker_id","No_Tasks","Time"])
+
 
 
 # Reading the config.json
@@ -356,6 +390,7 @@ for worker in configuration["workers"]:
     WORKER_AVAILABILITY[worker["worker_id"]] = {}
     WORKER_AVAILABILITY[worker["worker_id"]]["slots"] = worker["slots"]
     WORKER_AVAILABILITY[worker["worker_id"]]["port"] = worker["port"]
+    WORKER_AVAILABILITY[worker["worker_id"]]["maxcapacity"] = worker["slots"]
 
 print(WORKER_AVAILABILITY)
 

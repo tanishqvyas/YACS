@@ -169,46 +169,59 @@ fig.tight_layout()
 plt.show()
 
 
-def task_plot(algo):
-    x_axis = dict()
-    y_axis = dict()
-    numberOfTasks=dict()
-    for worker_id in [1,2,3]:
-        #graph[worker_id]=[]
-        lines=open(str(worker_id)+"_task_log_file_"+algo+".csv").read().split("\n")
-        x_axis[worker_id]=[0]
-        y_axis[worker_id]=[0]
-        points=[(0,0)]
-        numberOfTasks[worker_id]=0
-        
-        for line in lines[1:]:
-            if line:
-                print(line)
-                values = line.split(",")
-                message=values[1].strip()
-                time = values[2]
-                if message == "TASK BEGUN":
-                    task_id = values[0]
-                    numberOfTasks[worker_id] += 1
-                    #x_axis[worker_id].append(time)
-                    #y_axis[worker_id].append(numberOfTasks[worker_id])
-                    points.append((time,numberOfTasks[worker_id]))
-                if message == "TASK END":
-                    numberOfTasks[worker_id] -= 1
-                    #x_axis[worker_id].append(time)
-                    #y_axis[worker_id].append(numberOfTasks[worker_id])
-                    points.append((time,numberOfTasks[worker_id]))
-        points.sort(key=lambda x:x[1])
-        x_axis[worker_id]=[i[0] for i in points]
-        y_axis[worker_id]=[i[1] for i in points]
+# def task_plot(algo):
+#     x_axis = dict()
+#     y_axis = dict()
+#     numberOfTasks=dict()
+#     #graph[worker_id]=[]
+#     lines=open(i).read().split("\n")
+#     numberOfTasks[worker_id]=0
+    
+#     for line in lines[1:]:
+#         if line:
+#             print(line)
+#             values = line.split(",")
+#             wid=values[0]
+#             message=values[1].strip()
+#             time = values[2]
+#     fig, ax = plt.subplots(figsize=(25, 5))
+#     ax.plot(x_axis[1], y_axis[1], 'g', label="Worker 1")
+#     ax.plot(x_axis[2], y_axis[2], 'r', label="Worker 2")
+#     ax.plot(x_axis[3], y_axis[3], 'b', label="Worker 3")
+#     ax.set_xlabel('Time')
+#     ax.set_ylabel('No of tasks in the Worker')
+#     legend = ax.legend(loc='best')
+#     plt.show()
+
+
+#for i in ["tasks_Masterlogs_Random.csv","tasks_Masterlogs_RR.csv","tasks_Masterlogs_LL.csv"]:
+    # task_plot(i)
+
+
+def task_plot(file_name):
+    to_plot=open("tasks_Masterlogs_"+file_name+".csv").read().split("\n")
+    workers=dict()
+    timestamps=dict()
+    for line in to_plot[1:]:
+        if line:
+            wid,tasks,time=line.split(",")
+            tasks,time=int(tasks),float(time)
+            try:
+                workers[wid].append(tasks)
+                timestamps[wid].append(time)
+            except:
+                workers[wid]=[tasks]
+                timestamps[wid]=[time]
     fig, ax = plt.subplots(figsize=(25, 5))
-    ax.plot(x_axis[1], y_axis[1], 'g', label="Worker 1")
-    ax.plot(x_axis[2], y_axis[2], 'r', label="Worker 2")
-    ax.plot(x_axis[3], y_axis[3], 'b', label="Worker 3")
+    ax.plot(timestamps["1"],workers["1"], 'g', label="Worker 1")
+    ax.plot(timestamps["2"],workers["2"], 'r', label="Worker 2")
+    ax.plot(timestamps["3"],workers["3"], 'b', label="Worker 3")
+    ax.set_title('Number of Tasks vs Time in '+file_name+ " Scheduling")
     ax.set_xlabel('Time')
     ax.set_ylabel('No of tasks in the Worker')
     legend = ax.legend(loc='best')
     plt.show()
 
-for i in ["Random","RR","LL"]:
-    task_plot(i)
+task_plot("Random")
+task_plot("RR")
+task_plot("LL")
