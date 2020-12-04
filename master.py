@@ -176,7 +176,7 @@ def send_job_to_worker():
                 "interval": JOBS[0]["list_map_tasks"][0]["duration"]
             }
 
-            # Deletet the task scheduled
+            # Delete the task scheduled
             JOBS[0]["list_map_tasks"].pop(0)
            
         else:
