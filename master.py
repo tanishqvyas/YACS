@@ -42,6 +42,12 @@ def listen_job_request():
         job_arrival_time=time.time()
         
         # Creating a dictionary to append
+        # Dictionary contains 
+            # Total number of map and reduce tasks
+            # Number of completed map and reduce tasts
+            # List of map and reduced tasks
+            # Job arrival time
+            # Job id
         job_to_append = {
             "total_map_tasks":total_map_tasks,
             "total_reduce_tasks":total_reduce_tasks,
@@ -270,7 +276,7 @@ def send_job_to_worker():
                     max_slot_worker=wid
                 worker_lock.release()
                 
-                # If Slot if Found Then Send the request
+                # If Slot is Found Then Send the request
                 if(slot_found):
                     
                     worker_lock.acquire()
