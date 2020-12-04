@@ -8,21 +8,19 @@ import numpy
 import threading
 
 
-
-sem=threading.Semaphore(1)
 port = int(sys.argv[1])
 worker_id = int(sys.argv[2])
 algo = sys.argv[3]
 
 logfile=str(worker_id)+"_log_file_"+ algo+".csv"
-f = open(logfile, "w+")
-w = csv.writer(f)
-w.writerow(["task_Id","time","start_time","end_time"])
+with open(logfile, "w+") as f:
+    w = csv.writer(f)
+    w.writerow(["task_Id","time"])
 
 logs=str(worker_id)+"_task_log_file_"+ algo+".csv"
-f = open(logfile, "w+")
-w = csv.writer(f)
-w.writerow(["task_Id","message","time"])
+with open(logs, "w+") as f1:
+    w1 = csv.writer(f1)
+    w1.writerow(["task_Id","message","time"])
 
 def listen_from_master():
     s=socket.socket()
@@ -67,7 +65,7 @@ def send_to_master(job_id, task_id, interval,start_time):
         w.writerow([task_id,"TASK END",end_time])
     with open(logfile,"a") as f:
         w = csv.writer(f)
-        w.writerow([task_id,total_time,start_time,end_time])
+        w.writerow([task_id,total_time])
     s.connect((worker_host,master_port))  
     s.send(json.dumps(finish).encode())
     s.close()

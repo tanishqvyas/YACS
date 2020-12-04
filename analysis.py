@@ -10,13 +10,13 @@ master_log_random=pd.read_csv("Masterlogs_Random.csv")
 master_log_rr=pd.read_csv("Masterlogs_RR.csv")
 master_log_ll=pd.read_csv("Masterlogs_LL.csv")
 
-worker1_rr=pd.read_csv("1_log_file_rr.csv")
-worker2_rr=pd.read_csv("2_log_file_rr.csv")
-worker3_rr=pd.read_csv("3_log_file_rr.csv")
+worker1_rr=pd.read_csv("1_log_file_RR.csv")
+worker2_rr=pd.read_csv("2_log_file_RR.csv")
+worker3_rr=pd.read_csv("3_log_file_RR.csv")
 
-worker1_ll=pd.read_csv("1_log_file_ll.csv")
-worker2_ll=pd.read_csv("2_log_file_ll.csv")
-worker3_ll=pd.read_csv("3_log_file_ll.csv")
+worker1_ll=pd.read_csv("1_log_file_LL.csv")
+worker2_ll=pd.read_csv("2_log_file_LL.csv")
+worker3_ll=pd.read_csv("3_log_file_LL.csv")
 
 worker1_Random=pd.read_csv("1_log_file_Random.csv")
 worker2_Random=pd.read_csv("2_log_file_Random.csv")
@@ -174,25 +174,34 @@ def task_plot(algo):
     y_axis = dict()
     numberOfTasks=dict()
     for worker_id in [1,2,3]:
-        lines=open(str(worker_id)+"_log_file_"+algo+".csv").read()
+        #graph[worker_id]=[]
+        lines=open(str(worker_id)+"_task_log_file_"+algo+".csv").read().split("\n")
         x_axis[worker_id]=[0]
         y_axis[worker_id]=[0]
+        points=[(0,0)]
         numberOfTasks[worker_id]=0
+        
         for line in lines[1:]:
-            if line.strip():
+            if line:
+                print(line)
                 values = line.split(",")
                 message=values[1].strip()
                 time = values[2]
                 if message == "TASK BEGUN":
                     task_id = values[0]
                     numberOfTasks[worker_id] += 1
-                    x_axis[worker_id].append(time)
-                    y_axis[worker_id].append(numberOfTasks[worker_id])
+                    #x_axis[worker_id].append(time)
+                    #y_axis[worker_id].append(numberOfTasks[worker_id])
+                    points.append((time,numberOfTasks[worker_id]))
                 if message == "TASK END":
                     numberOfTasks[worker_id] -= 1
-                    x_axis[worker_id].append(time)
-                    y_axis[worker_id].append(numberOfTasks[worker_id])
-    fig, ax = plt.subplots()
+                    #x_axis[worker_id].append(time)
+                    #y_axis[worker_id].append(numberOfTasks[worker_id])
+                    points.append((time,numberOfTasks[worker_id]))
+        points.sort(key=lambda x:x[1])
+        x_axis[worker_id]=[i[0] for i in points]
+        y_axis[worker_id]=[i[1] for i in points]
+    fig, ax = plt.subplots(figsize=(25, 5))
     ax.plot(x_axis[1], y_axis[1], 'g', label="Worker 1")
     ax.plot(x_axis[2], y_axis[2], 'r', label="Worker 2")
     ax.plot(x_axis[3], y_axis[3], 'b', label="Worker 3")
@@ -201,5 +210,5 @@ def task_plot(algo):
     legend = ax.legend(loc='best')
     plt.show()
 
-for i in ["Random","rr","ll"]:
+for i in ["Random","RR","LL"]:
     task_plot(i)

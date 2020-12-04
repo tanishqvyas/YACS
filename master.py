@@ -340,9 +340,9 @@ elif sys.argv[2] == "RR":
 elif sys.argv[2] == "LL":
     logfile = "Masterlogs_LL.csv"
 
-f = open(logfile,'w+')
-w = csv.writer(f)
-w.writerow(["Job_Id","Time"])
+with open(logfile,'w+') as f:
+    w = csv.writer(f)
+    w.writerow(["Job_Id","Time"])
 
 
 
