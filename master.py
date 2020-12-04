@@ -143,6 +143,12 @@ def send_job_to_worker():
     global WORKER_AVAILABILITY
     global JOBS
 
+    # Extracting workers list in case of round robin
+    cur_workers = list(WORKER_AVAILABILITY.keys())
+    cur_workers.sort()
+    cur_worker_idx = 0
+    num_workers = 3
+
     while True:
 
         # Check if task available
@@ -171,14 +177,13 @@ def send_job_to_worker():
 
         # -----------------------Checking What should be done for the task----------------
 
-        # print(JOBS, len(JOBS))
         # check if any map task left to schedule
         if(len(JOBS) > 0):
             pass
         else:
             jobs_lock.release()
             continue
-        # print(len(JOBS))
+
         if(len(JOBS[-1]["list_map_tasks"]) > 0):
             
             task_to_send = {
@@ -207,12 +212,10 @@ def send_job_to_worker():
                 # No reduce task left to schedule
                 else:
                     if(JOBS[-1]["total_completed_reduce_tasks"] == JOBS[-1]["total_reduce_tasks"]):
-                        # print("It came here okay")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
                     else:
-                        # print("It came here okay but this is other else")
                         task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
@@ -224,19 +227,14 @@ def send_job_to_worker():
         
         jobs_lock.release()            
 
-        # print("----------------------------------\n")
-        # print(task_to_send)
-        # print("print len : ", len(JOBS))
-        # print()
-        # print(JOBS)
-        # print("----------------------------------\n\n")
-
 
         # Random Schedueling
         if(SCHEDUELING_ALGO == "Random"):
             slot_found = False
 
+            worker_lock.acquire()
             workers_list = list(WORKER_AVAILABILITY.keys())
+            worker_lock.release()
 
             while(not slot_found):
                 max_slot_worker = 0
@@ -246,15 +244,17 @@ def send_job_to_worker():
                 else:
                     break
 
-                if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
+                worker_lock.acquire()
+                if(WORKER_AVAILABILITY[wid]["slots"] > 0):                    
                     slot_found=True
                     max_slot_worker=wid
-                
+                worker_lock.release()
+
                 # If Slot if Found Then Send the request
                 if(slot_found):
                     
                     worker_lock.acquire()
-                    jobs_lock.acquire()
+                    #jobs_lock.acquire()
                     # Decrease Slot availability by 1
                     WORKER_AVAILABILITY[max_slot_worker]["slots"] -= 1
 
@@ -262,8 +262,8 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
-                    jobs_lock.release()
+                    print("Sending Task  :   ", task_to_send)
+                    #jobs_lock.release()
                     worker_lock.release()
                     break
 
@@ -278,15 +278,17 @@ def send_job_to_worker():
             while(not slot_found):
 
                 max_slot_worker = 0
-                cur_workers = list(WORKER_AVAILABILITY.keys())
-                cur_workers.sort()
+                
+                while not slot_found:
 
-                for wid in cur_workers:
-
-                    if(WORKER_AVAILABILITY[wid]["slots"] > 0): 
+                    if(WORKER_AVAILABILITY[cur_workers[cur_worker_idx]]["slots"] > 0):
                         slot_found=True
-                        max_slot_worker=wid
+                        max_slot_worker=cur_workers[cur_worker_idx]
+                        cur_worker_idx = (cur_worker_idx+1)%num_workers
                         break
+                    else:
+                        cur_worker_idx = (cur_worker_idx+1)%num_workers
+
                 
                 # If Slot if Found Then Send the request
                 if(slot_found):
@@ -300,7 +302,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
+                    print("Sending Task  :   ", task_to_send)
                     jobs_lock.release()
                     worker_lock.release()
                     break
@@ -340,7 +342,7 @@ def send_job_to_worker():
                     s=socket.socket()
                     s.connect(('localhost',int(WORKER_AVAILABILITY[max_slot_worker]["port"])))
                     s.send(json.dumps(task_to_send).encode())
-                    print("Skadoosh : ", task_to_send)
+                    print("Sending Task  :   ", task_to_send)
                     jobs_lock.release()
                     worker_lock.release()
                     break
