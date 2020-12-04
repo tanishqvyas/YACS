@@ -56,14 +56,16 @@ def listen_job_request():
         }
         
         # Appending the job
+        jobs_lock.acquire()
         JOBS.append(job_to_append)
+        jobs_lock.release()
 
         job.close()
 
 
 
 def listen_worker_update():
-
+    
     #worker_id, job_is, task_id
     global WORKER_AVAILABILITY
     # Request received from worker
@@ -79,42 +81,57 @@ def listen_worker_update():
 
         print("Received : ", response)
         # print(JOBS)
-        for i in range(len(JOBS)):
+
+        jobs_lock.acquire()
+        length=len(JOBS)
+        jobs_lock.release()
+
+        for i in range(length):
             print("yo",JOBS[i],response, sep="   <--->   ")
-            if JOBS[i]["jobId"]==response["jobId"]:
+            jobs_lock.acquire()
+            job_i=JOBS[i]
+            jobs_lock.release()
+            if job_i["jobId"]==response["jobId"]:
+                
                 print("yo4")
                 
                 if 'M' in response["taskId"]:
                 # Map job
-                    # jobs_lock.acquire()
+                    jobs_lock.acquire()
                     JOBS[i]["total_completed_map_tasks"]+=1
-                    # jobs_lock.release()
+                    jobs_lock.release()
                     print("yo2")
                     break
                 else:
-                    # jobs_lock.acquire()
+                    jobs_lock.acquire()
                     JOBS[i]["total_completed_reduce_tasks"]+=1
-                    # jobs_lock.release()
+                    jobs_lock.release()
                     print("yo3")
 
+                    jobs_lock.acquire()
                     if JOBS[i]["total_completed_reduce_tasks"] == JOBS[i]["total_reduce_tasks"]:
+                        jobs_lock.release()
                         to_remove=i
                         break
+                    else:
+                        jobs_lock.release()
                     
         if to_remove !=-1:
 
             print("JOB : ",response["jobId"], " Completed.")
+            jobs_lock.acquire()
             total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
-            with open(logfile,"a") as f:
-                w = csv.writer(f)
-                w.writerow([response["jobId"],total_time])
+            jobs_lock.release()
+        #with open(logfile,"a") as f:
+            w = csv.writer(f)
+            w.writerow([response["jobId"],total_time])
             jobs_lock.acquire()
             JOBS.pop(to_remove)
             jobs_lock.release()
 
-        # worker_lock.acquire()
+        worker_lock.acquire()
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
-        # worker_lock.release()
+        worker_lock.release()
 
     worker.close()
 
@@ -129,8 +146,14 @@ def send_job_to_worker():
     while True:
 
         # Check if task available
-        while len(JOBS)==0:
+        jobs_lock.acquire()
+        length=len(JOBS)
+        jobs_lock.release()
+        while length==0:
             print("No Jobs left to schedule")
+            jobs_lock.acquire()
+            length=len(JOBS)
+            jobs_lock.release()
             time.sleep(1)
             
         
@@ -139,7 +162,8 @@ def send_job_to_worker():
             pass
         else:
             jobs_lock.release()
-            continue       
+            continue   
+        
         # Extracting task randomly 
         holder = JOBS[0]
         # JOBS.pop(0)
