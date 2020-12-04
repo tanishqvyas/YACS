@@ -50,7 +50,13 @@ def listen_job_request():
 
         job_arrival_time=time.time()
         
-        # Creating a job with various features
+        # Creating a dictionary to append
+        # Dictionary contains 
+            # Total number of map and reduce tasks
+            # Number of completed map and reduce tasts
+            # List of map and reduced tasks
+            # Job arrival time
+            # Job id
         job_to_append = {
             "total_map_tasks":total_map_tasks,
             "total_reduce_tasks":total_reduce_tasks,
@@ -137,7 +143,7 @@ def listen_worker_update():
             # Calculating job execution time
             total_time=time.time() - JOBS[to_remove]["job_arrival_time"]
             jobs_lock.release()
-
+            # logging master logs
             with open(logfile,"a") as f:
                 w = csv.writer(f)
                 w.writerow([response["jobId"],total_time])
@@ -152,20 +158,20 @@ def listen_worker_update():
         worker_lock.release()
         time_recv=time.time()
         for i in range(num_workers):
+            # logging task execution times for different workers
             with open("tasks_"+logfile,'a') as f:
                 w = csv.writer(f)
                 worker_lock.acquire()
                 w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_recv])
                 worker_lock.release()
-                    
 
     worker.close()
 
 
-# Function to Schedule TASKS
+# Function to Schedule TASKS using different algorithms
 def send_job_to_worker():
     
-    global SCHEDUELING_ALGO
+    global SCHEDULING_ALGO
     global WORKER_AVAILABILITY
     global JOBS
 
@@ -201,8 +207,6 @@ def send_job_to_worker():
 
         # Jobs are scheduled in FCFS manner
         holder = JOBS[0]
-
-        # -----------------------Checking What should be done for the task----------------
 
         # check if any map task left to schedule
         if(len(JOBS) > 0):
@@ -241,11 +245,9 @@ def send_job_to_worker():
                 # No reduce task left to schedule
                 else:
                     if(JOBS[0]["total_completed_reduce_tasks"] == JOBS[0]["total_reduce_tasks"]):
-                        task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
                     else:
-                        task_to_send = {"msg":"ISSSUEEEEEEEEEEEEee"}
                         jobs_lock.release()
                         continue
 
@@ -258,7 +260,7 @@ def send_job_to_worker():
 
 
         # Random Scheduling
-        if(SCHEDUELING_ALGO == "Random"):
+        if(SCHEDULING_ALGO == "Random"):
             slot_found = False
 
             workers_list = list(WORKER_AVAILABILITY.keys())
@@ -279,7 +281,7 @@ def send_job_to_worker():
                     max_slot_worker=wid
                 worker_lock.release()
                 
-                # If Slot if Found Then Send the request
+                # If Slot is Found Then Send the request
                 if(slot_found):
                     
                     worker_lock.acquire()
@@ -306,7 +308,7 @@ def send_job_to_worker():
 
 
         # Round Robin Scheduling
-        elif(SCHEDUELING_ALGO == "RR"):
+        elif(SCHEDULING_ALGO == "RR"):
             
             slot_found = False
             while(not slot_found):
@@ -355,7 +357,7 @@ def send_job_to_worker():
 
 
         # Least Loaded Scheduling
-        elif SCHEDUELING_ALGO == "LL":
+        elif SCHEDULING_ALGO == "LL":
             slot_found = False
             max_slots = 0
             max_slot_worker = 0
@@ -400,12 +402,12 @@ def send_job_to_worker():
 
 
 # Reading the command line arguments
-PATH_TO_CONFIG = sys.argv[1]
-SCHEDUELING_ALGO = sys.argv[2]
-JOBS = []
+PATH_TO_CONFIG = sys.argv[1]            # Path to the configuration json file of the workers
+SCHEDULING_ALGO = sys.argv[2]           # Name of the scheduling algorithm to be used - RR, LL or Random
+JOBS = []                               # List of all jobs submitted to the master
 
 
-# Creating log files for Master
+# Time at which master begins execution
 master_begins = time.time()
 
 if sys.argv[2] == "Random":
@@ -415,14 +417,14 @@ elif sys.argv[2] == "RR":
 elif sys.argv[2] == "LL":
     logfile = "Masterlogs_LL.csv"
 
+# Creating log files for Master
 with open(logfile,'w+') as f:
     w = csv.writer(f)
     w.writerow(["Job_Id","Time"])
-
+# Creating log files for Tasks
 with open("tasks_"+logfile,'w+') as f:
     w = csv.writer(f)
     w.writerow(["Worker_id","No_Tasks","Time"])
-
 
 
 # Reading the config.json
