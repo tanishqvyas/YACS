@@ -131,11 +131,11 @@ means = [sum(random_job) / len(random_job),sum(ll_job) / len(ll_job), sum(rr_job
 medians = [median_random,median_ll,median_rr]
 
 x = np.arange(len(labels))  # the label locations
-width = 0.35                # the width of the bars
+width = 0.35                # the width of the bar
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - width/2, means, width, label='Mean')
-rects2 = ax.bar(x + width/2, medians, width, label='Median')
+bars1 = ax.bar(x - width/2, means, width, label='Mean')
+bars2 = ax.bar(x + width/2, medians, width, label='Median')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_ylabel('Time')
@@ -145,9 +145,9 @@ ax.set_xticklabels(labels)
 ax.legend()
 
 
-def autolabel(rects):
-    """Attach a text label above each bar in *rects*, displaying its height."""
-    for rect in rects:
+def value_of_bar(bars):
+    """Attach a text label above each bar in *bars*, displaying its height."""
+    for rect in bars:
         height = round(rect.get_height(),3)
         print("Height",height)
         ax.annotate('{}'.format(height),
@@ -157,8 +157,8 @@ def autolabel(rects):
                     ha='center', va='bottom')
 
 
-autolabel(rects1)
-autolabel(rects2)
+value_of_bar(bars1)
+value_of_bar(bars2)
 
 fig.tight_layout()
 plt.show()
@@ -169,11 +169,11 @@ medians = [t_median_random,t_median_ll,t_median_rr]
 
 
 x = np.arange(len(labels))  # the label locations
-width = 0.35                # the width of the bars
+width = 0.35                # the width of the bar
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - width/2, means, width, label='Mean')
-rects2 = ax.bar(x + width/2, medians, width, label='Median')
+bars1 = ax.bar(x - width/2, means, width, label='Mean')
+bars2 = ax.bar(x + width/2, medians, width, label='Median')
 
 # Adding titles and labels
 ax.set_ylabel('Time')
@@ -182,8 +182,8 @@ ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()
 
-autolabel(rects1)
-autolabel(rects2)
+value_of_bar(bars1)
+value_of_bar(bars2)
 fig.tight_layout()
 
 # VISUAL REPRESENTATION OF PART 2 RESULT 1
