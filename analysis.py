@@ -44,7 +44,7 @@ if(len(random_job)>0):
     else:
         median_random = random_job[int((1+len(random_job))/2)]
 
-        print("Median Job Execution Time for Random Scheduling: ", median_random)
+    print("Median Job Execution Time for Random Scheduling: ", median_random)
 
 # Calculating Average Job Execution Time for Least Loaded Scheduling
 ll_job = master_log_ll["Time"].tolist()
