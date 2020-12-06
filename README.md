@@ -23,11 +23,17 @@
 ```
 
 ## Setup Instructions
+
 1. Clone the repository by typing the following command:
-``` git clone "https://github.com/tanishqvyas/YACS.git" ```
+``` 
+git clone "https://github.com/tanishqvyas/YACS.git" 
+```
+
 
 2. Navigate to the project directory by typing:
-``` cd YACS ```
+```
+ cd YACS 
+```
 
 ## Execution Instructions
 1. Open 5 terminals. On the first 3 terminals type the following commands to run 3 worker nodes respectively:
