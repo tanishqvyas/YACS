@@ -179,7 +179,7 @@ def send_job_to_worker():
     cur_workers = list(WORKER_AVAILABILITY.keys())
     cur_workers.sort()
     cur_worker_idx = 0
-    num_workers = 3
+    num_workers = len(cur_workers)
 
     while True:
 
