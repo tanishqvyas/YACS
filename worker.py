@@ -22,6 +22,8 @@ with open(logfile, "w+") as f:
     w = csv.writer(f)
     w.writerow(["task_Id","time"])
 
+file_lock = threading.Lock()
+
 def listen_from_master():
     # This function listens to task requests from the master 
     s=socket.socket()
@@ -63,9 +65,11 @@ def send_to_master(job_id, task_id, interval,start_time):
     total_time=end_time- start_time 
     finish = {"workerId":worker_id,"jobId":job_id,"taskId":task_id}
     # Log the time taken to execute the task
+    file_lock.acquire()
     with open(logfile,"a") as f:
         w = csv.writer(f)
         w.writerow([task_id,total_time])
+    file_lock.release()
     # Update the master that the job has been completed
     s.connect((worker_host,master_port))  
     s.send(json.dumps(finish).encode())

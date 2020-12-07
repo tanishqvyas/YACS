@@ -16,9 +16,7 @@ It also logs task and job execution details for further analysis
 # Locks to protect shared variables
 jobs_lock = threading.Lock()
 worker_lock = threading.Lock()
-task_lock = threading.Lock()
-log_lock = threading.Lock()
-
+file_lock = threading.Lock()
 
 # Master listens to job requests from port 5000
 def listen_job_request():
@@ -159,13 +157,14 @@ def listen_worker_update():
         WORKER_AVAILABILITY[response["workerId"]]["slots"]+=1
         worker_lock.release()
 
-        # logging task execution times for different workers
+        file_lock.acquire()
+        # logging task execution times for different workers       
         time_recv=time.time()
         for i in range(num_workers):
             with open("tasks_"+logfile,'a') as f:
                 w = csv.writer(f)
                 w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_recv])
-        
+        file_lock.release()
     worker.close()
 
 
@@ -278,13 +277,14 @@ def send_job_to_worker():
                     s.send(json.dumps(task_to_send).encode())
                     print("Sending Task  :   ", task_to_send)
 
+                    file_lock.acquire()
                     # Write to logs
                     time_sent=time.time()
                     for i in range(num_workers):
                         with open("tasks_"+logfile,'a') as f:
                             w = csv.writer(f)
                             w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
-                    
+                    file_lock.release()
 
 
         # Round Robin Scheduling
@@ -315,12 +315,14 @@ def send_job_to_worker():
             s.send(json.dumps(task_to_send).encode())
             print("Sending Task  :   ", task_to_send)
 
+            file_lock.acquire()
             # Write to logs
             time_sent=time.time()
             for i in range(num_workers):
                 with open("tasks_"+logfile,'a') as f:
                     w = csv.writer(f)
                     w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
+            file_lock.release()
 
         # Least Loaded Scheduling
         elif SCHEDULING_ALGO == "LL":
@@ -352,13 +354,14 @@ def send_job_to_worker():
             s.send(json.dumps(task_to_send).encode())
             print("Sending Task  :   ", task_to_send)
             
+            file_lock.acquire()
             # Write to logs
             time_sent=time.time()
             for i in range(num_workers):
                 with open("tasks_"+logfile,'a') as f:
                     w = csv.writer(f)
                     w.writerow([cur_workers[i],WORKER_AVAILABILITY[cur_workers[i]]["maxcapacity"]-WORKER_AVAILABILITY[cur_workers[i]]["slots"],time_sent])
-
+            file_lock.release()
 
 
 
